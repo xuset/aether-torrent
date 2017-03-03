@@ -500,68 +500,6 @@ describe('lib', function () {
   })
 })
 
-describe('service worker', function () {
-  this.timeout(8000)
-
-  let iframe = null
-
-  before(function () {
-    return loadIframe(v1Base + 'index.html')
-    .then(elem => {
-      // register the service worker in the iframe and wait for it to activate
-      iframe = elem
-      iframe.contentWindow.navigator.serviceWorker.register(v1Base + 'planktos.sw.js')
-      return iframe.contentWindow.navigator.serviceWorker.ready
-    })
-    .then(() => new Promise(function (resolve) {
-      // refresh the iframe and wait for the page to be loaded
-      // This ensures the service worker is controlling the page
-      iframe.onload = function () {
-        resolve()
-      }
-      iframe.contentWindow.location.reload()
-    }))
-  })
-
-  it('service worker controls page', function () {
-    assert.notEqual(iframe.contentWindow.navigator.serviceWorker.controller, null)
-  })
-
-  it('window.fetch()', function () {
-    return iframe.contentWindow.fetch(v1Base + 'foobar.txt')
-    .then(resp => resp.text())
-    .then(text => {
-      assert.equal(text, 'foobar\n')
-    })
-  })
-
-  it('window.fetch() implied index html', function () {
-    return iframe.contentWindow.fetch(v1Base + 'foo')
-    .then(resp => resp.text())
-    .then(text => {
-      assert.equal(text, 'bar\n')
-    })
-  })
-
-  it('no iframe injected into html', function () {
-    assert.equal(iframe.contentDocument.getElementsByTagName('iframe').length, 0)
-  })
-})
-
-function loadIframe (url) {
-  return new Promise(function (resolve) {
-    let iframe = document.createElement('iframe')
-    iframe.onload = onload
-    iframe.src = url
-    document.body.appendChild(iframe)
-
-    function onload () {
-      iframe.onload = null
-      resolve(iframe)
-    }
-  })
-}
-
 function blobToText (blob) {
   return new Promise(function (resolve, reject) {
     let fr = new window.FileReader()
