@@ -261,28 +261,6 @@ describe('lib', function () {
     })
   })
 
-  it('planktos.fetch() preCached', function () {
-    let preCached = [
-      v1Base + 'planktos/planktos.min.js',
-      v1Base + 'planktos/install.js'
-    ]
-    return Promise.all(preCached.map(fpath => {
-      return planktos.fetch(new Request(fpath), {root: v1Base})
-    }))
-    .then(responses => responses.forEach(r => {
-      assert.notEqual(r, undefined)
-      assert.equal(r.status, 200)
-      assert.equal(r.statusText, 'OK')
-      assert.notEqual(r.headers.get('Content-Length'), null)
-      assert.equal(r.headers.get('Accept-Ranges'), 'bytes')
-    }))
-  })
-
-  it('planktos.fetch() preCached non normalized url', function () {
-    return planktos.fetch(new Request(v1Base + 'foo/../planktos/./planktos.min.js'))
-    .then(response => assert.notEqual(response, undefined))
-  })
-
   it('planktos.fetch() range header with zero start', function () {
     var req = new Request(v1Base + 'foobar.txt', {
       headers: {'Range': 'bytes=0-'}

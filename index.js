@@ -13,8 +13,6 @@ const Snapshot = require('./lib/snapshot')
 const Seeder = require('./lib/seeder')
 
 const preCached = [
-  '/planktos/planktos.min.js',
-  '/planktos/install.js'
 ]
 
 function Planktos (opts) {

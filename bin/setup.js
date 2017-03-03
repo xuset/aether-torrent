@@ -21,10 +21,8 @@ function copyLib (rootDir, cb) {
   const dstDir = rootDir + '/' + RESERVED_DIR
   if (!fs.existsSync(dstDir)) fs.mkdirSync(dstDir)
   const tasks = [
-    [__dirname + '/../install.js', dstDir + '/install.js'],
     [__dirname + '/../build/planktos.min.js', dstDir + '/planktos.min.js'],
-    [__dirname + '/../build/planktos.min.js.map', dstDir + '/planktos.min.js.map'],
-    [__dirname + '/../sw.js', rootDir + '/planktos.sw.js']
+    [__dirname + '/../build/planktos.min.js.map', dstDir + '/planktos.min.js.map']
   ].map(t => { return cb => copyFile(t[0], t[1], cb) })
   parallelLimit(tasks, FS_CONCURRENCY, cb)
 }
