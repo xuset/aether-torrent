@@ -9,10 +9,15 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      './test/www/v1/planktos/planktos.min.js',
+      './build/torrentworker.min.js',
       './build/test.js',
       {
-        pattern: './test/www/**',
+        pattern: './test/**',
+        included: false,
+        nocache: true
+      },
+      {
+        pattern: './build/torrentworker.min.js.map',
         included: false,
         nocache: true
       }
@@ -62,7 +67,7 @@ module.exports = function (config) {
     concurrency: Infinity,
 
     sauceLabs: {
-      testName: 'planktos'
+      testName: 'torrentworker'
     },
     customLaunchers: {
       SL_Chrome: {

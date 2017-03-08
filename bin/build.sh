@@ -9,15 +9,15 @@ rm build/* || true
 
 # Build lib
 
-browserify index.js --debug -s Planktos \
- | exorcist build/planktos.js.map \
- > build/planktos.js
+browserify index.js --debug -s TorrentWorker \
+ | exorcist build/torrentworker.js.map \
+ > build/torrentworker.js
 
-uglifyjs build/planktos.js --mangle --compress warnings=false \
-  --in-source-map build/planktos.js.map \
-  --source-map build/planktos.min.js.map \
-  --source-map-url planktos.min.js.map \
- > build/planktos.min.js
+uglifyjs build/torrentworker.js --mangle --compress warnings=false \
+  --in-source-map build/torrentworker.js.map \
+  --source-map build/torrentworker.min.js.map \
+  --source-map-url torrentworker.min.js.map \
+ > build/torrentworker.min.js
 
 # Build tests
 
