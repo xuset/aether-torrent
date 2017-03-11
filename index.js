@@ -9,15 +9,26 @@ const Torrent = require('./lib/torrent')
 const Seeder = require('./lib/seeder')
 
 function TorrentWorker (opts) {
+  let self = this
   opts = opts || {}
-  this._namespace = opts.namespace != null ? opts.namespace : '' // TODO set default to 'torrent-worker'
-  this._torrents = {}
-  this._torrentStore = new IdbKvStore('torrentworker-' + this._namespace)
-  this._seeder = null
+  self.destroyed = false
+
+  self._namespace = opts.namespace != null ? opts.namespace : '' // TODO set default to 'torrent-worker'
+  self._torrents = {}
+  self._torrentStore = new IdbKvStore('torrentworker-' + self._namespace)
+  self._seeder = null
+
+  self._torrentStore.on('set', function (change) {
+    if (self._torrents[change.key]) return
+    let t = new Torrent(change.value, self._namespace)
+    self._torrents[change.key] = t
+    if (self._seeder) self._seeder.add(t)
+  })
 }
 
 TorrentWorker.prototype.getAll = function () {
   let self = this
+  if (self.destroyed) throw new Error('Instance already destroyed')
 
   return self._torrentStore.values().then(rawTorrents => {
     for (let i = 0; i < rawTorrents.length; i++) {
@@ -31,6 +42,7 @@ TorrentWorker.prototype.getAll = function () {
 
 TorrentWorker.prototype.add = function (torrentMetaBuffer) {
   let self = this
+  if (self.destroyed) throw new Error('Instance already destroyed')
 
   if (typeof torrentMetaBuffer === 'string') {
     return global.fetch(torrentMetaBuffer)
@@ -56,6 +68,7 @@ TorrentWorker.prototype.add = function (torrentMetaBuffer) {
 
 TorrentWorker.prototype.remove = function (hash) {
   let self = this
+  if (self.destroyed) throw new Error('Instance already destroyed')
   if (self._torrents[hash]) self._torrents[hash].destroy()
   if (self._seeder) self._seeder.remove(hash)
   delete self._torrents[hash]
@@ -64,20 +77,29 @@ TorrentWorker.prototype.remove = function (hash) {
 
 TorrentWorker.prototype.startSeeder = function () {
   let self = this
+  if (self.destroyed) throw new Error('Instance already destroyed')
   if (self._seeder) return self._seeder
   self._seeder = new Seeder()
+
+  for (let hash in self._torrents) self._seeder.add(self._torrents[hash])
 
   let tabElect = new TabElect('torrentworker')
   tabElect.on('elected', self._seeder.start.bind(self._seeder))
   tabElect.on('deposed', self._seeder.stop.bind(self._seeder))
 
-  self._torrentStore.on('set', function (change) {
-    self._seeder.add(new Torrent(change.value, self._namespace))
-  })
-
-  self._torrentStore.values().then(rawTorrent => {
-    rawTorrent.forEach(t => self._seeder.add(new Torrent(t, self._namespace)))
-  })
-
   return self._seeder
+}
+
+TorrentWorker.prototype.destroy = function () {
+  let self = this
+  if (self.destroyed) return
+  self.destroyed = true
+
+  if (self.seeder != null) self.seeder.destroy()
+  for (let hash in self._torrents) self._torrents[hash].close()
+  self._torrentStore.close()
+
+  self._torrents = null
+  self._torrentStore = null
+  self._seeder = null
 }

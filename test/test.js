@@ -13,6 +13,7 @@ describe('TorrentWorker', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     return tw.getAll()
     .then(torrents => assert.equal(torrents.length, 0))
+    .then(() => tw.destroy())
   })
 
   it('add(url) then getAll()', function () {
@@ -27,6 +28,7 @@ describe('TorrentWorker', function () {
         assert.strictEqual(torrents[0], t)
       })
     })
+    .then(() => tw.destroy())
   })
 
   it('add(url) then remove()', function () {
@@ -35,6 +37,7 @@ describe('TorrentWorker', function () {
     .then(t => tw.remove(t.hash))
     .then(() => tw.getAll())
     .then(torrents => assert.equal(torrents.length, 0))
+    .then(() => tw.destroy())
   })
 
   it('torrent.getFile()', function () {
@@ -46,29 +49,31 @@ describe('TorrentWorker', function () {
       assert.equal(f.length, 7)
       assert.ok(typeof f.offset === 'number')
     })
+    .then(() => tw.destroy())
   })
 
-  // it('file.getStream()', function () {
-  //   var tw = new TorrentWorker({namespace: Math.random()})
-  //   tw.startSeeder()
-  //   return tw.add(torrentURL)
-  //   .then(torrent => torrent.getFile('foobar.txt').getStream())
-  //   .then(stream => nodeStreamToString(stream))
-  //   .then(text => assert.equals(text, 'foobar\n'))
-  // })
+  it('file.getStream()', function () {
+    var tw = new TorrentWorker({namespace: Math.random()})
+    tw.startSeeder()
+    return tw.add(torrentURL)
+    .then(torrent => torrent.getFile('foobar.txt').getStream())
+    .then(stream => nodeStreamToString(stream))
+    .then(text => assert.equal(text, 'foobar\n'))
+    .then(() => tw.destroy())
+  })
 })
 
-// function nodeStreamToString (stream) {
-//   return new Promise(function (resolve, reject) {
-//     let buffer = ''
-//     stream.on('data', chunk => {
-//       buffer += chunk.toString()
-//     })
-//     stream.on('end', (c) => {
-//       resolve(buffer)
-//     })
-//     stream.on('error', (err) => {
-//       reject(err)
-//     })
-//   })
-// }
+function nodeStreamToString (stream) {
+  return new Promise(function (resolve, reject) {
+    let buffer = ''
+    stream.on('data', chunk => {
+      buffer += chunk.toString()
+    })
+    stream.on('end', (c) => {
+      resolve(buffer)
+    })
+    stream.on('error', (err) => {
+      reject(err)
+    })
+  })
+}
