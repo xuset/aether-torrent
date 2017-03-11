@@ -67,7 +67,7 @@ TorrentWorker.prototype.startSeeder = function () {
   if (self._seeder) return self._seeder
   self._seeder = new Seeder()
 
-  let tabElect = new TabElect('planktos')
+  let tabElect = new TabElect('torrentworker')
   tabElect.on('elected', self._seeder.start.bind(self._seeder))
   tabElect.on('deposed', self._seeder.stop.bind(self._seeder))
 
@@ -75,8 +75,8 @@ TorrentWorker.prototype.startSeeder = function () {
     self._seeder.add(new Torrent(change.value, self._namespace))
   })
 
-  self._torrentStore.values().then(rawSnapshots => {
-    rawSnapshots.forEach(s => self._seeder.add(new Torrent(s, self._namespace)))
+  self._torrentStore.values().then(rawTorrent => {
+    rawTorrent.forEach(t => self._seeder.add(new Torrent(t, self._namespace)))
   })
 
   return self._seeder
