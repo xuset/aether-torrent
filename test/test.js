@@ -2,9 +2,7 @@
 
 const TorrentWorker = require('../')
 const assert = require('assert')
-const torrentURL = '/base/test/a.torrent'
-
-localStorage.debug = 'webtorrent*'
+const torrentURL = '/base/test/www/a.torrent'
 
 describe('TorrentWorker', function () {
   this.timeout(8000)
