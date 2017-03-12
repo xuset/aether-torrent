@@ -53,7 +53,7 @@ TorrentWorker.prototype.add = function (torrentMetaBuffer) {
   if (!Buffer.isBuffer(torrentMetaBuffer)) torrentMetaBuffer = new Buffer(torrentMetaBuffer)
 
   let hash = parseTorrent(new Buffer(torrentMetaBuffer)).infoHash
-  if (hash in self._torrents) return Promise.resolve(torrent)
+  if (hash in self._torrents) return Promise.resolve(self._torrents[hash])
 
   let rawTorrent = {
     torrentMetaBuffer: torrentMetaBuffer,
