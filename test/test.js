@@ -1,6 +1,6 @@
 /* eslint-env mocha, browser */
-/* global TorrentWorker */
 
+const TorrentWorker = require('../')
 const assert = require('assert')
 const torrentURL = '/base/test/a.torrent'
 

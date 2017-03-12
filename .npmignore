@@ -1,14 +1,3 @@
 node_modules
 npm-debug.log
 *.swp
-*.js.map
-example/planktos
-example/planktos.sw.min.js
-test/www/v1/planktos
-test/www/v1/planktos.sw.js
-test/www/v2/planktos
-test/www/v2/planktos.sw.js
-
-# Different from .gitignore
-build/planktos.js
-build/test.js

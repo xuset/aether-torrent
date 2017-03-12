@@ -5,19 +5,13 @@ module.exports = function (config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha'],
+    frameworks: ['mocha', 'browserify'],
 
     // list of files / patterns to load in the browser
     files: [
-      './build/torrentworker.min.js',
-      './build/test.js',
+      'test/test.js',
       {
         pattern: './test/**',
-        included: false,
-        nocache: true
-      },
-      {
-        pattern: './build/torrentworker.min.js.map',
         included: false,
         nocache: true
       }
@@ -30,6 +24,11 @@ module.exports = function (config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'test/test.js': ['browserify']
+    },
+
+    browserify: {
+      debug: true
     },
 
     // test results reporter to use
