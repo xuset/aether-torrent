@@ -1,9 +1,8 @@
 {
-  "name": "planktos",
-  "version": "0.3.0",
-  "description": "Serving websites over bittorrent",
+  "name": "permatorrent",
+  "version": "0.0.0",
+  "description": "Persistent torrent client for web browsers and web workers",
   "main": "index.js",
-  "bin": "./bin/setup.js",
   "dependencies": {
     "chunk-store-read-stream": "^1.0.0",
     "idb-kv-store": "^4.1.0",
@@ -34,31 +33,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xuset/planktos.git"
+    "url": "git+https://github.com/xuset/permatorrent.git"
   },
   "keywords": [
     "bittorrent",
     "webtorrent",
+    "torrent",
     "p2p",
-    "static",
-    "seed"
+    "persistent",
+    "permanent"
   ],
-  "standard": {
-    "globals": [
-      "URL",
-      "Response",
-      "BroadcastChannel",
-      "Blob"
-    ],
-    "ignore": [
-      "build",
-      "test/www"
-    ]
-  },
   "author": "xuset",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xuset/planktos/issues"
-  },
-  "homepage": "https://xuset.github.io/planktos/"
+    "url": "https://github.com/xuset/permatorrent/issues"
+  }
 }

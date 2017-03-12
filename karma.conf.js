@@ -11,7 +11,7 @@ module.exports = function (config) {
     files: [
       'test/test.js',
       {
-        pattern: './test/**',
+        pattern: './test/www/**',
         included: false,
         nocache: true
       }

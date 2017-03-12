@@ -1,6 +1,6 @@
 module.exports = TorrentWorker
 
-const global = typeof window !== 'undefined' ? window : self // eslint-disable-line
+/* global fetch */
 
 const IdbKvStore = require('idb-kv-store')
 const parseTorrent = require('parse-torrent-file')
@@ -13,9 +13,9 @@ function TorrentWorker (opts) {
   opts = opts || {}
   self.destroyed = false
 
-  self._namespace = opts.namespace != null ? opts.namespace : '' // TODO set default to 'torrent-worker'
+  self._namespace = opts.namespace || 'permatorrent'
   self._torrents = {}
-  self._torrentStore = new IdbKvStore('torrentworker-' + self._namespace)
+  self._torrentStore = new IdbKvStore(self._namespace + '-torrents')
   self._seeder = null
 
   self._torrentStore.on('set', function (change) {
@@ -45,7 +45,7 @@ TorrentWorker.prototype.add = function (torrentMetaBuffer) {
   if (self.destroyed) throw new Error('Instance already destroyed')
 
   if (typeof torrentMetaBuffer === 'string') {
-    return global.fetch(torrentMetaBuffer)
+    return fetch(torrentMetaBuffer)
     .then(response => response.arrayBuffer())
     .then(arrayBuffer => self.add(arrayBuffer))
   }
@@ -83,7 +83,7 @@ TorrentWorker.prototype.startSeeder = function () {
 
   for (let hash in self._torrents) self._seeder.add(self._torrents[hash])
 
-  let tabElect = new TabElect('torrentworker')
+  let tabElect = new TabElect(self._namespace + '-tabelect')
   tabElect.on('elected', self._seeder.start.bind(self._seeder))
   tabElect.on('deposed', self._seeder.stop.bind(self._seeder))
 
