@@ -1,6 +1,6 @@
 module.exports = TorrentWorker
 
-/* global fetch */
+/* global fetch, URL, location */
 
 const IdbKvStore = require('idb-kv-store')
 const parseTorrent = require('parse-torrent-file')
@@ -40,14 +40,15 @@ TorrentWorker.prototype.getAll = function () {
   })
 }
 
-TorrentWorker.prototype.add = function (torrentMetaBuffer) {
+TorrentWorker.prototype.add = function (torrentMetaBuffer, opts) {
   let self = this
+  opts = opts || {}
   if (self.destroyed) throw new Error('Instance already destroyed')
 
   if (typeof torrentMetaBuffer === 'string') {
     return fetch(torrentMetaBuffer)
     .then(response => response.arrayBuffer())
-    .then(arrayBuffer => self.add(arrayBuffer))
+    .then(arrayBuffer => self.add(arrayBuffer, opts))
   }
 
   if (!Buffer.isBuffer(torrentMetaBuffer)) torrentMetaBuffer = new Buffer(torrentMetaBuffer)
@@ -55,9 +56,13 @@ TorrentWorker.prototype.add = function (torrentMetaBuffer) {
   let infoHash = parseTorrent(new Buffer(torrentMetaBuffer)).infoHash
   if (infoHash in self._torrents) return Promise.resolve(self._torrents[infoHash])
 
+  let webseeds = (typeof opts.webseeds === 'string' ? [opts.webseeds] : opts.webseeds) || []
+  webseeds = webseeds.map(url => new URL(url, location.origin).toString())
+
   let rawTorrent = {
     torrentMetaBuffer: torrentMetaBuffer,
-    infoHash: infoHash
+    infoHash: infoHash,
+    webseeds: webseeds
   }
 
   let torrent = new Torrent(rawTorrent, self._namespace)

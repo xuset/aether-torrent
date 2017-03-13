@@ -13,7 +13,8 @@ module.exports = function (config) {
       {
         pattern: './test/www/**',
         included: false,
-        nocache: true
+        nocache: true,
+        watch: false
       }
     ],
 

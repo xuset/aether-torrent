@@ -2,7 +2,7 @@
 
 const TorrentWorker = require('../')
 const assert = require('assert')
-const torrentURL = '/base/test/www/a.torrent'
+const base = '/base/test/www/'
 
 describe('TorrentWorker', function () {
   this.timeout(8000)
@@ -16,7 +16,7 @@ describe('TorrentWorker', function () {
 
   it('add(url) then getAll()', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent')
     .then(t => {
       assert.equal(t.closed, false)
       assert.ok('infoHash' in t)
@@ -31,7 +31,7 @@ describe('TorrentWorker', function () {
 
   it('add(url) then remove()', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent')
     .then(t => tw.remove(t.infoHash))
     .then(() => tw.getAll())
     .then(torrents => assert.equal(torrents.length, 0))
@@ -40,7 +40,7 @@ describe('TorrentWorker', function () {
 
   it('torrent.getFile()', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent')
     .then(torrent => {
       var f = torrent.getFile('foobar.txt')
       assert.equal(f.path, 'foobar.txt')
@@ -53,7 +53,7 @@ describe('TorrentWorker', function () {
   it('file.getStream()', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getStream())
     .then(stream => nodeStreamToString(stream))
     .then(text => assert.equal(text, 'foobar\n'))
@@ -63,7 +63,7 @@ describe('TorrentWorker', function () {
   it('file.getStream() - ranged', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getStream({start: 2, end: 4}))
     .then(stream => nodeStreamToString(stream))
     .then(text => assert.equal(text, 'oba'))
@@ -73,7 +73,7 @@ describe('TorrentWorker', function () {
   it('file.getBlob()', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob())
     .then(blob => blobToText(blob))
     .then(text => assert.equal(text, 'foobar\n'))
@@ -83,7 +83,7 @@ describe('TorrentWorker', function () {
   it('file.getBlob() - ranged', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob({start: 2, end: 4}))
     .then(blob => blobToText(blob))
     .then(text => assert.equal(text, 'oba'))
@@ -94,7 +94,7 @@ describe('TorrentWorker', function () {
     if (typeof ReadableStream === 'undefined') return Promise.resolve()
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getWebStream())
     .then(stream => {
       assert.equal(stream.length, 7)
@@ -108,7 +108,7 @@ describe('TorrentWorker', function () {
     if (typeof ReadableStream === 'undefined') return Promise.resolve()
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
-    return tw.add(torrentURL)
+    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getWebStream({start: 2, end: 4}))
     .then(stream => {
       assert.equal(stream.length, 3)
