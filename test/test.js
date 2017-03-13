@@ -54,8 +54,7 @@ describe('TorrentWorker', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
     return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => torrent.getFile('foobar.txt').getStream())
-    .then(stream => nodeStreamToString(stream))
+    .then(torrent => nodeStreamToString(torrent.getFile('foobar.txt').getStream()))
     .then(text => assert.equal(text, 'foobar\n'))
     .then(() => tw.destroy())
   })
@@ -64,8 +63,10 @@ describe('TorrentWorker', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
     return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => torrent.getFile('foobar.txt').getStream({start: 2, end: 4}))
-    .then(stream => nodeStreamToString(stream))
+    .then(torrent => {
+      let stream = torrent.getFile('foobar.txt').getStream({start: 2, end: 4})
+      return nodeStreamToString(stream)
+    })
     .then(text => assert.equal(text, 'oba'))
     .then(() => tw.destroy())
   })
@@ -75,7 +76,7 @@ describe('TorrentWorker', function () {
     tw.startSeeder()
     return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob())
-    .then(blob => blobToText(blob))
+    .then(blob => blobToString(blob))
     .then(text => assert.equal(text, 'foobar\n'))
     .then(() => tw.destroy())
   })
@@ -85,7 +86,7 @@ describe('TorrentWorker', function () {
     tw.startSeeder()
     return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob({start: 2, end: 4}))
-    .then(blob => blobToText(blob))
+    .then(blob => blobToString(blob))
     .then(text => assert.equal(text, 'oba'))
     .then(() => tw.destroy())
   })
@@ -95,10 +96,10 @@ describe('TorrentWorker', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
     return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => torrent.getFile('foobar.txt').getWebStream())
-    .then(stream => {
-      assert.equal(stream.length, 7)
-      return webStreamToString(stream)
+    .then(torrent => {
+      let webStream = torrent.getFile('foobar.txt').getWebStream()
+      assert.equal(webStream.length, 7)
+      return webStreamToString(webStream)
     })
     .then(text => assert.equal(text, 'foobar\n'))
     .then(() => tw.destroy())
@@ -109,10 +110,10 @@ describe('TorrentWorker', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     tw.startSeeder()
     return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => torrent.getFile('foobar.txt').getWebStream({start: 2, end: 4}))
-    .then(stream => {
-      assert.equal(stream.length, 3)
-      return webStreamToString(stream)
+    .then(torrent => {
+      let webStream = torrent.getFile('foobar.txt').getWebStream({start: 2, end: 4})
+      assert.equal(webStream.length, 3)
+      return webStreamToString(webStream)
     })
     .then(text => assert.equal(text, 'oba'))
     .then(() => tw.destroy())
@@ -134,7 +135,7 @@ function nodeStreamToString (stream) {
   })
 }
 
-function blobToText (blob) {
+function blobToString (blob) {
   return new Promise(function (resolve, reject) {
     let fr = new window.FileReader()
     fr.onload = onload
