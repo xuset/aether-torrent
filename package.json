@@ -1,5 +1,5 @@
 {
-  "name": "permatorrent",
+  "name": "perma-torrent",
   "version": "0.0.0",
   "description": "Persistent torrent client for web browsers and web workers",
   "main": "index.js",
@@ -28,12 +28,13 @@
   },
   "scripts": {
     "standard": "standard",
-    "bundle": "browserify . -s TorrentWorker | uglifyjs -m -c warnings=false > torrentworker.min.js",
+    "karma": "karma",
+    "bundle": "browserify . -s PermaTorrent | uglifyjs -m -c warnings=false > permatorrent.min.js",
     "test": "standard && karma start"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xuset/permatorrent.git"
+    "url": "git+https://github.com/xuset/perma-torrent.git"
   },
   "keywords": [
     "bittorrent",
@@ -46,6 +47,7 @@
   "author": "xuset",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xuset/permatorrent/issues"
-  }
+    "url": "https://github.com/xuset/perma-torrent/issues"
+  },
+  "homepage": "https://github.com/xuset/perma-torrent"
 }

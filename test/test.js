@@ -1,122 +1,122 @@
 /* eslint-env mocha, browser */
 
-const TorrentWorker = require('../')
+const PermaTorrent = require('../')
 const assert = require('assert')
 const base = '/base/test/www/'
 
-describe('TorrentWorker', function () {
+describe('PermaTorrent', function () {
   this.timeout(8000)
 
   it('getAll() empty', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    return tw.getAll()
+    var pt = new PermaTorrent({namespace: Math.random()})
+    return pt.getAll()
     .then(torrents => assert.equal(torrents.length, 0))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('add(url) then getAll()', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    return tw.add(base + 'foobar.txt.torrent')
+    var pt = new PermaTorrent({namespace: Math.random()})
+    return pt.add(base + 'foobar.txt.torrent')
     .then(t => {
       assert.equal(t.closed, false)
       assert.ok('infoHash' in t)
-      return tw.getAll()
+      return pt.getAll()
       .then(torrents => {
         assert.equal(torrents.length, 1)
         assert.strictEqual(torrents[0], t)
       })
     })
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('add(url) then remove()', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    return tw.add(base + 'foobar.txt.torrent')
-    .then(t => tw.remove(t.infoHash))
-    .then(() => tw.getAll())
+    var pt = new PermaTorrent({namespace: Math.random()})
+    return pt.add(base + 'foobar.txt.torrent')
+    .then(t => pt.remove(t.infoHash))
+    .then(() => pt.getAll())
     .then(torrents => assert.equal(torrents.length, 0))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('torrent.getFile()', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    return tw.add(base + 'foobar.txt.torrent')
+    var pt = new PermaTorrent({namespace: Math.random()})
+    return pt.add(base + 'foobar.txt.torrent')
     .then(torrent => {
       var f = torrent.getFile('foobar.txt')
       assert.equal(f.path, 'foobar.txt')
       assert.equal(f.length, 7)
       assert.ok(typeof f.offset === 'number')
     })
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('file.getStream()', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    tw.startSeeder()
-    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    var pt = new PermaTorrent({namespace: Math.random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => nodeStreamToString(torrent.getFile('foobar.txt').getStream()))
     .then(text => assert.equal(text, 'foobar\n'))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('file.getStream() - ranged', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    tw.startSeeder()
-    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    var pt = new PermaTorrent({namespace: Math.random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => {
       let stream = torrent.getFile('foobar.txt').getStream({start: 2, end: 4})
       return nodeStreamToString(stream)
     })
     .then(text => assert.equal(text, 'oba'))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('file.getBlob()', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    tw.startSeeder()
-    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    var pt = new PermaTorrent({namespace: Math.random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob())
     .then(blob => blobToString(blob))
     .then(text => assert.equal(text, 'foobar\n'))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('file.getBlob() - ranged', function () {
-    var tw = new TorrentWorker({namespace: Math.random()})
-    tw.startSeeder()
-    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    var pt = new PermaTorrent({namespace: Math.random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob({start: 2, end: 4}))
     .then(blob => blobToString(blob))
     .then(text => assert.equal(text, 'oba'))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('file.getWebStream()', function () {
     if (typeof ReadableStream === 'undefined') return Promise.resolve()
-    var tw = new TorrentWorker({namespace: Math.random()})
-    tw.startSeeder()
-    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    var pt = new PermaTorrent({namespace: Math.random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => {
       let webStream = torrent.getFile('foobar.txt').getWebStream()
       assert.equal(webStream.length, 7)
       return webStreamToString(webStream)
     })
     .then(text => assert.equal(text, 'foobar\n'))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 
   it('file.getWebStream() - ranged', function () {
     if (typeof ReadableStream === 'undefined') return Promise.resolve()
-    var tw = new TorrentWorker({namespace: Math.random()})
-    tw.startSeeder()
-    return tw.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    var pt = new PermaTorrent({namespace: Math.random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => {
       let webStream = torrent.getFile('foobar.txt').getWebStream({start: 2, end: 4})
       assert.equal(webStream.length, 3)
       return webStreamToString(webStream)
     })
     .then(text => assert.equal(text, 'oba'))
-    .then(() => tw.destroy())
+    .then(() => pt.destroy())
   })
 })
 

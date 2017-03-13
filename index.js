@@ -1,4 +1,4 @@
-module.exports = TorrentWorker
+module.exports = PermaTorrent
 
 /* global fetch, URL, location */
 
@@ -8,7 +8,7 @@ const TabElect = require('tab-elect')
 const Torrent = require('./lib/torrent')
 const Seeder = require('./lib/seeder')
 
-function TorrentWorker (opts) {
+function PermaTorrent (opts) {
   let self = this
   opts = opts || {}
   self.destroyed = false
@@ -26,7 +26,7 @@ function TorrentWorker (opts) {
   })
 }
 
-TorrentWorker.prototype.getAll = function () {
+PermaTorrent.prototype.getAll = function () {
   let self = this
   if (self.destroyed) throw new Error('Instance already destroyed')
 
@@ -40,7 +40,7 @@ TorrentWorker.prototype.getAll = function () {
   })
 }
 
-TorrentWorker.prototype.add = function (torrentMetaBuffer, opts) {
+PermaTorrent.prototype.add = function (torrentMetaBuffer, opts) {
   let self = this
   opts = opts || {}
   if (self.destroyed) throw new Error('Instance already destroyed')
@@ -71,7 +71,7 @@ TorrentWorker.prototype.add = function (torrentMetaBuffer, opts) {
   return self._torrentStore.set(torrent.infoHash, rawTorrent).then(() => torrent)
 }
 
-TorrentWorker.prototype.remove = function (infoHash) {
+PermaTorrent.prototype.remove = function (infoHash) {
   let self = this
   if (self.destroyed) throw new Error('Instance already destroyed')
   if (self._torrents[infoHash]) self._torrents[infoHash].destroy()
@@ -80,7 +80,7 @@ TorrentWorker.prototype.remove = function (infoHash) {
   return self._torrentStore.remove(infoHash)
 }
 
-TorrentWorker.prototype.startSeeder = function () {
+PermaTorrent.prototype.startSeeder = function () {
   let self = this
   if (self.destroyed) throw new Error('Instance already destroyed')
   if (self._seeder) return self._seeder
@@ -95,7 +95,7 @@ TorrentWorker.prototype.startSeeder = function () {
   return self._seeder
 }
 
-TorrentWorker.prototype.destroy = function () {
+PermaTorrent.prototype.destroy = function () {
   let self = this
   if (self.destroyed) return
   self.destroyed = true

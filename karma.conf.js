@@ -67,7 +67,7 @@ module.exports = function (config) {
     concurrency: Infinity,
 
     sauceLabs: {
-      testName: 'torrentworker'
+      testName: 'perma-torrent'
     },
     customLaunchers: {
       SL_Chrome: {
