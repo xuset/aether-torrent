@@ -33,7 +33,7 @@ TorrentWorker.prototype.getAll = function () {
   return self._torrentStore.values().then(rawTorrents => {
     for (let i = 0; i < rawTorrents.length; i++) {
       let t = rawTorrents[i]
-      self._torrents[t.hash] = self._torrents[t.hash] || new Torrent(t, self._namespace)
+      self._torrents[t.infoHash] = self._torrents[t.infoHash] || new Torrent(t, self._namespace)
     }
 
     return Object.keys(self._torrents).map(k => self._torrents[k])
@@ -52,27 +52,27 @@ TorrentWorker.prototype.add = function (torrentMetaBuffer) {
 
   if (!Buffer.isBuffer(torrentMetaBuffer)) torrentMetaBuffer = new Buffer(torrentMetaBuffer)
 
-  let hash = parseTorrent(new Buffer(torrentMetaBuffer)).infoHash
-  if (hash in self._torrents) return Promise.resolve(self._torrents[hash])
+  let infoHash = parseTorrent(new Buffer(torrentMetaBuffer)).infoHash
+  if (infoHash in self._torrents) return Promise.resolve(self._torrents[infoHash])
 
   let rawTorrent = {
     torrentMetaBuffer: torrentMetaBuffer,
-    hash: hash // TODO change to infoHash
+    infoHash: infoHash
   }
 
   let torrent = new Torrent(rawTorrent, self._namespace)
-  self._torrents[hash] = torrent
+  self._torrents[infoHash] = torrent
   if (self._seeder) self._seeder.add(torrent)
-  return self._torrentStore.set(torrent.hash, rawTorrent).then(() => torrent)
+  return self._torrentStore.set(torrent.infoHash, rawTorrent).then(() => torrent)
 }
 
-TorrentWorker.prototype.remove = function (hash) {
+TorrentWorker.prototype.remove = function (infoHash) {
   let self = this
   if (self.destroyed) throw new Error('Instance already destroyed')
-  if (self._torrents[hash]) self._torrents[hash].destroy()
-  if (self._seeder) self._seeder.remove(hash)
-  delete self._torrents[hash]
-  return self._torrentStore.remove(hash)
+  if (self._torrents[infoHash]) self._torrents[infoHash].destroy()
+  if (self._seeder) self._seeder.remove(infoHash)
+  delete self._torrents[infoHash]
+  return self._torrentStore.remove(infoHash)
 }
 
 TorrentWorker.prototype.startSeeder = function () {
@@ -81,7 +81,7 @@ TorrentWorker.prototype.startSeeder = function () {
   if (self._seeder) return self._seeder
   self._seeder = new Seeder()
 
-  for (let hash in self._torrents) self._seeder.add(self._torrents[hash])
+  for (let infoHash in self._torrents) self._seeder.add(self._torrents[infoHash])
 
   let tabElect = new TabElect(self._namespace + '-tabelect')
   tabElect.on('elected', self._seeder.start.bind(self._seeder))
@@ -96,7 +96,7 @@ TorrentWorker.prototype.destroy = function () {
   self.destroyed = true
 
   if (self.seeder != null) self.seeder.destroy()
-  for (let hash in self._torrents) self._torrents[hash].close()
+  for (let infoHash in self._torrents) self._torrents[infoHash].close()
   self._torrentStore.close()
 
   self._torrents = null

@@ -19,7 +19,7 @@ describe('TorrentWorker', function () {
     return tw.add(torrentURL)
     .then(t => {
       assert.equal(t.closed, false)
-      assert.ok('hash' in t)
+      assert.ok('infoHash' in t)
       return tw.getAll()
       .then(torrents => {
         assert.equal(torrents.length, 1)
@@ -32,7 +32,7 @@ describe('TorrentWorker', function () {
   it('add(url) then remove()', function () {
     var tw = new TorrentWorker({namespace: Math.random()})
     return tw.add(torrentURL)
-    .then(t => tw.remove(t.hash))
+    .then(t => tw.remove(t.infoHash))
     .then(() => tw.getAll())
     .then(torrents => assert.equal(torrents.length, 0))
     .then(() => tw.destroy())
