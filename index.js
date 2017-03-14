@@ -15,12 +15,12 @@ function PermaTorrent (opts) {
 
   self._namespace = opts.namespace || 'permatorrent'
   self._torrents = {}
-  self._torrentStore = new IdbKvStore(self._namespace + '-torrents')
   self._seeder = null
+  self._torrentStore = new IdbKvStore(self._namespace + '-torrents')
 
   self._torrentStore.on('set', function (change) {
     if (self._torrents[change.key]) return
-    let t = new Torrent(change.value, self._namespace)
+    let t = self._torrents[change.key] || new Torrent(change.value, self._namespace)
     self._torrents[change.key] = t
     if (self._seeder) self._seeder.add(t)
   })
