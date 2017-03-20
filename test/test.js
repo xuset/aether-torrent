@@ -140,9 +140,19 @@ describe('PermaTorrent', function () {
       var f = torrent.getFile('foobar.txt')
       assert.equal(f.path, 'foobar.txt')
       assert.equal(f.length, 7)
+      assert.equal(f.mime, 'text/plain')
       assert.ok(typeof f.offset === 'number')
     })
     .then(() => pt.destroy())
+  })
+
+  it('torrent.getFile().mime', function () {
+    var pt = new PermaTorrent({namespace: random()})
+    return pt.add(base + 'index.html.torrent').then(torrent => {
+      var f = torrent.getFile('index.html')
+      assert.equal(f.path, 'index.html')
+      assert.equal(f.mime, 'text/html')
+    })
   })
 
   it('file.getStream()', function () {
