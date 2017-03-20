@@ -145,11 +145,27 @@ describe('PermaTorrent', function () {
     .then(() => pt.destroy())
   })
 
+  it('torrent.getFile() - non normalized path', function () {
+    var pt = new PermaTorrent({namespace: random()})
+    return pt.add(base + 'foobar.txt.torrent')
+    .then(torrent => {
+      assert.notEqual(torrent.getFile('foobar.txt'), undefined)
+      assert.notEqual(torrent.getFile('/foobar.txt'), undefined)
+      assert.notEqual(torrent.getFile('/foo/../foobar.txt'), undefined)
+      assert.notEqual(torrent.getFile('/./foobar.txt'), undefined)
+    })
+    .then(() => pt.destroy())
+  })
+
   it('file.getStream()', function () {
     var pt = new PermaTorrent({namespace: random()})
     pt.startSeeder()
     return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => nodeStreamToString(torrent.getFile('foobar.txt').getStream()))
+    .then(torrent => {
+      let stream = torrent.getFile('foobar.txt').getStream()
+      assert.equal(stream.length, 7)
+      return nodeStreamToString(stream)
+    })
     .then(text => assert.equal(text, 'foobar\n'))
     .then(() => pt.destroy())
   })
@@ -160,10 +176,24 @@ describe('PermaTorrent', function () {
     return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => {
       let stream = torrent.getFile('foobar.txt').getStream({start: 2, end: 4})
+      assert.equal(stream.length, 3)
       return nodeStreamToString(stream)
     })
     .then(text => assert.equal(text, 'oba'))
     .then(() => pt.destroy())
+  })
+
+  it('file.getStream() - bad range', function () {
+    var pt = new PermaTorrent({namespace: random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    .then(torrent => {
+      let file = torrent.getFile('foobar.txt')
+      assert.throws(() => file.getStream({start: -1, end: 4}))
+      assert.throws(() => file.getStream({start: 1, end: 0}))
+      assert.throws(() => file.getStream({start: 8, end: 9}))
+      pt.destroy()
+    })
   })
 
   it('file.getBlob()', function () {
