@@ -146,7 +146,7 @@ describe('PermaTorrent', function () {
     .then(() => pt.destroy())
   })
 
-  it('torrent.getFile().mime', function () {
+  it('torrent.getFile() - Check mime type', function () {
     var pt = new PermaTorrent({namespace: random()})
     return pt.add(base + 'index.html.torrent').then(torrent => {
       var f = torrent.getFile('index.html')
@@ -181,7 +181,10 @@ describe('PermaTorrent', function () {
     pt.startSeeder()
     return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob())
-    .then(blob => blobToString(blob))
+    .then(blob => {
+      assert.equal(blob.mime, 'text/plain')
+      return blobToString(blob)
+    })
     .then(text => assert.equal(text, 'foobar\n'))
     .then(() => pt.destroy())
   })
@@ -194,6 +197,17 @@ describe('PermaTorrent', function () {
     .then(blob => blobToString(blob))
     .then(text => assert.equal(text, 'oba'))
     .then(() => pt.destroy())
+  })
+
+  it('file.getBlob() - Check Mime', function () {
+    var pt = new PermaTorrent({namespace: random()})
+    pt.startSeeder()
+    return pt.add(base + 'index.html.torrent', {webseeds: base + 'index.html'})
+      .then(torrent => torrent.getFile('index.html').getBlob())
+      .then(blob => {
+        assert.equal(blob.mime, 'text/html')
+      })
+      .then(() => pt.destroy())
   })
 
   it('file.getWebStream()', function () {
