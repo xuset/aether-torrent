@@ -194,7 +194,10 @@ describe('PermaTorrent', function () {
     pt.startSeeder()
     return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob({start: 2, end: 4}))
-    .then(blob => blobToString(blob))
+    .then(blob => {
+      assert.equal(blob.mime, 'text/plain')
+      return blobToString(blob)
+    })
     .then(text => assert.equal(text, 'oba'))
     .then(() => pt.destroy())
   })
