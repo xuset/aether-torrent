@@ -182,7 +182,7 @@ describe('PermaTorrent', function () {
     return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob())
     .then(blob => {
-      assert.equal(blob.mime, 'text/plain')
+      assert.equal(blob.type, 'text/plain')
       return blobToString(blob)
     })
     .then(text => assert.equal(text, 'foobar\n'))
@@ -195,7 +195,7 @@ describe('PermaTorrent', function () {
     return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
     .then(torrent => torrent.getFile('foobar.txt').getBlob({start: 2, end: 4}))
     .then(blob => {
-      assert.equal(blob.mime, 'text/plain')
+      assert.equal(blob.type, 'text/plain')
       return blobToString(blob)
     })
     .then(text => assert.equal(text, 'oba'))
@@ -208,7 +208,7 @@ describe('PermaTorrent', function () {
     return pt.add(base + 'index.html.torrent', {webseeds: base + 'index.html'})
       .then(torrent => torrent.getFile('index.html').getBlob())
       .then(blob => {
-        assert.equal(blob.mime, 'text/html')
+        assert.equal(blob.type, 'text/html')
       })
       .then(() => pt.destroy())
   })
