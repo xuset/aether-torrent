@@ -206,6 +206,32 @@ describe('PermaTorrent', function () {
     })
   })
 
+  it('file.getStream() - full range', function () {
+    var pt = new PermaTorrent({namespace: random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    .then(torrent => {
+      let stream = torrent.getFile('foobar.txt').getStream({start: 0, end: 6})
+      assert.equal(stream.length, 7)
+      return nodeStreamToString(stream)
+    })
+    .then(text => assert.equal(text, 'foobar\n'))
+    .then(() => pt.destroy())
+  })
+
+  it('file.getStream() - zero range', function () {
+    var pt = new PermaTorrent({namespace: random()})
+    pt.startSeeder()
+    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
+    .then(torrent => {
+      let stream = torrent.getFile('foobar.txt').getStream({start: 0, end: 0})
+      assert.equal(stream.length, 1)
+      return nodeStreamToString(stream)
+    })
+    .then(text => assert.equal(text, 'f'))
+    .then(() => pt.destroy())
+  })
+
   it('file.getBlob()', function () {
     var pt = new PermaTorrent({namespace: random()})
     pt.startSeeder()
