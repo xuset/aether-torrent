@@ -1,6 +1,8 @@
-# Perma-Torrent
+# Perma-Torrent [![Build Status](https://travis-ci.org/xuset/perma-torrent.svg?branch=master)](https://travis-ci.org/xuset/perma-torrent) [![npm](https://img.shields.io/npm/v/perma-torrent.svg)](https://npmjs.org/package/perma-torrent)
 
 #### Persistent torrent client for web browsers and web workers
+
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/xuset-perma-torrent.svg)](https://saucelabs.com/u/xuset-perma-torrent)
 
 Perma-Torrent persists everything to IndexedDB so the torrent data does not disappear when the web page is closed. This also means that the torrent data is shared across all web pages so only one page has to do the downloading while any number of web pages can stream the downloaded data. The torrent data is even accessible from within web workers!
 
