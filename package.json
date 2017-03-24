@@ -1,6 +1,6 @@
 {
   "name": "perma-torrent",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Persistent torrent client for web browsers and web workers",
   "main": "index.js",
   "dependencies": {
