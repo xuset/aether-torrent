@@ -1,123 +1,107 @@
-/* eslint-env mocha, browser */
+/* eslint-env browser, mocha */
 
-const PermaTorrent = require('../')
-const assert = require('assert')
-const parseTorrent = require('parse-torrent-file')
-const base = '/base/test/www/'
+// TODO add index.html to multi file torrent
+
+var PermaTorrent = require('../')
+var assert = require('assert')
+var simpleGet = require('simple-get')
+var parseTorrent = require('parse-torrent-file')
+var base = '/base/test/www/'
 
 describe('PermaTorrent', function () {
-  this.timeout(8000)
+  this.timeout(4000)
 
-  it('getAll() empty', function () {
+  it('torrent array empty', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    return pt.getAll()
-    .then(torrents => assert.equal(torrents.length, 0))
-    .then(() => pt.destroy())
+    pt.on('ready', function () {
+      assert.equal(pt.torrents.length, 0)
+      pt.destroy()
+      done()
+    })
   })
 
-  it('add(url) then getAll()', function () {
+  it('add(url)', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    return pt.add(base + 'foobar.txt.torrent')
-    .then(t => {
-      assert.equal(t.closed, false)
-      assert.ok('infoHash' in t)
-      return pt.getAll()
-      .then(torrents => {
-        assert.equal(torrents.length, 1)
-        assert.strictEqual(torrents[0], t)
+    pt.add(base + 'foobar.txt.torrent', function (err, torrent) {
+      assert.equal(null, err)
+      assert.equal(torrent.closed, false)
+      assert.ok('infoHash' in torrent)
+      assert.equal(pt.torrents.length, 1)
+      assert.strictEqual(pt.torrents[0], torrent)
+      pt.destroy()
+      done()
+    })
+  })
+
+  it('add(url) - in different instances', function (done) {
+    var namespace = random()
+    var pt1 = new PermaTorrent({namespace: namespace})
+    var pt2 = new PermaTorrent({namespace: namespace})
+
+    pt2.on('torrent', function (t) {
+      assert.equal(pt2.torrents.length, 1)
+      assert.strictEqual(t, pt2.torrents[0])
+      pt1.destroy()
+      pt2.destroy()
+      done()
+    })
+
+    pt1.add(base + 'foobar.txt.torrent', function (err) {
+      assert.equal(err, null)
+    })
+  })
+
+  it('add(url) then remove()', function (done) {
+    var pt = new PermaTorrent({namespace: random()})
+    pt.add(base + 'foobar.txt.torrent', function (err, t) {
+      assert.equal(err, null)
+      pt.remove(t.infoHash, function (err) {
+        assert.equal(err, null)
+        assert.equal(pt.torrents.length, 0)
+        pt.destroy()
+        done()
       })
     })
-    .then(() => pt.destroy())
   })
 
-  it('add(url) then getAll() - in different instances', function () {
+  it('add(url) then remove() - in different instances', function (done) {
     var namespace = random()
     var pt1 = new PermaTorrent({namespace: namespace})
     var pt2 = new PermaTorrent({namespace: namespace})
-    return pt1.add(base + 'foobar.txt.torrent')
-    .then(() => pt2.getAll())
-    .then(torrents => {
-      assert.equal(torrents.length, 1)
-      pt1.destroy()
-      pt2.destroy()
+
+    pt2.on('torrent', function (t) {
+      assert.equal(pt2.torrents.length, 1)
+      pt2.remove(t.infoHash, function (err) {
+        assert.equal(err, null)
+        assert.equal(pt2.torrents.length, 0)
+        assert.equal(pt1.torrents.length, 1)
+        pt1.destroy()
+        pt2.destroy()
+        done()
+      })
+    })
+
+    pt1.add(base + 'foobar.txt.torrent', function (err) {
+      assert.equal(err, null)
     })
   })
 
-  it('add(url) then remove()', function () {
+  it('remove() - non existent', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    return pt.add(base + 'foobar.txt.torrent')
-    .then(t => pt.remove(t.infoHash))
-    .then(() => pt.getAll())
-    .then(torrents => assert.equal(torrents.length, 0))
-    .then(() => pt.destroy())
-  })
-
-  it('add(url) then remove() - in different instances', function () {
-    var namespace = random()
-    var pt1 = new PermaTorrent({namespace: namespace})
-    var pt2 = new PermaTorrent({namespace: namespace})
-    var pt3 = new PermaTorrent({namespace: namespace})
-
-    return pt1.add(base + 'foobar.txt.torrent')
-    .then(() => pt2.getAll())
-    .then(torrents => pt1.remove(torrents[0].infoHash))
-    .then(() => pt2.getAll())
-    .then(torrents => assert.equal(torrents.length, 1))
-    .then(() => pt3.getAll())
-    .then(torrents => assert.equal(torrents.length, 1))
-    .then(() => {
-      pt1.destroy()
-      pt2.destroy()
-      pt3.destroy()
-    })
-  })
-
-  it('remove() - non existent', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    return pt.remove('f00ba70000000000000000000000000000000000')
-    .then(() => pt.destroy())
-  })
-
-  it('add(buffer) - Using torrent defined webseed', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-
-    return fetch(base + 'foobar.txt.torrent')
-    .then(response => response.arrayBuffer())
-    .then(arrayBuffer => {
-      var meta = parseTorrent(new Buffer(arrayBuffer))
-      meta.urlList.push(new URL(base + 'foobar.txt', location.origin).toString())
-      return pt.add(parseTorrent.encode(meta))
-    })
-    .then(t => nodeStreamToString(t.files[0].getStream()))
-    .then(text => {
-      assert.equal(text, 'foobar\n')
+    pt.remove('f00ba70000000000000000000000000000000000', function (err) {
+      assert.equal(null, err)
       pt.destroy()
+      done()
     })
   })
 
-  it('add(url) - Start seeder after add', function () {
+  it('add(url) - for multi file torrent', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    return pt.add(base + 'foobar.txt.torrent')
-    .then(t => {
-      pt.startSeeder()
-      return nodeStreamToString(t.files[0].getStream())
-    })
-    .then(text => {
-      assert.equal(text, 'foobar\n')
-      pt.destroy()
-    })
-  })
+    pt.add(base + 'multi.torrent', function (err, t) {
+      assert.equal(err, null)
 
-  it('add(url) - for multi file torrent', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-
-    return pt.add(base + 'multi.torrent')
-    .then(torrent => {
-      console.log('FILES', torrent.files.map(f => f.path))
-      var fileA = torrent.getFile('multi/fileA')
-      var fileB = torrent.getFile('multi/nested/fileB')
+      var fileA = t.getFile('multi/fileA')
+      var fileB = t.getFile('multi/nested/fileB')
 
       assert.notEqual(fileA, undefined)
       assert.equal(fileA.name, 'fileA')
@@ -130,219 +114,277 @@ describe('PermaTorrent', function () {
       assert.equal(fileB.path, 'multi/nested/fileB')
       assert.equal(fileB.length, 6)
       assert.ok(fileB.offset >= 0)
+
+      pt.destroy()
+      done()
     })
   })
 
-  it('torrent.getFile()', function () {
+  it('torrent.getFile()', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    return pt.add(base + 'foobar.txt.torrent')
-    .then(torrent => {
-      var f = torrent.getFile('foobar.txt')
+    pt.add(base + 'foobar.txt.torrent', function (err, t) {
+      assert.equal(err, null)
+      var f = t.getFile('foobar.txt')
       assert.equal(f.path, 'foobar.txt')
       assert.equal(f.length, 7)
       assert.equal(f.mime, 'text/plain')
-      assert.ok(typeof f.offset === 'number')
+      assert.equal(f.offset, 0)
+      pt.destroy()
+      done()
     })
-    .then(() => pt.destroy())
   })
 
-  it('torrent.getFile() - check mime type', function () {
+  it('torrent.getFile() - non normalized path', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    return pt.add(base + 'index.html.torrent').then(torrent => {
-      var f = torrent.getFile('index.html')
+    pt.add(base + 'foobar.txt.torrent', function (err, t) {
+      assert.equal(err, null)
+      assert.notEqual(t.getFile('foobar.txt'), undefined)
+      assert.notEqual(t.getFile('/foobar.txt'), undefined)
+      assert.notEqual(t.getFile('/foo/../foobar.txt'), undefined)
+      assert.notEqual(t.getFile('/./foobar.txt'), undefined)
+      pt.destroy()
+      done()
+    })
+  })
+
+  it('torrent.getFile() - check mime type', function (done) {
+    var pt = new PermaTorrent({namespace: random()})
+    pt.add(base + 'index.html.torrent', function (err, t) {
+      assert.equal(err, null)
+      var f = t.getFile('index.html')
       assert.equal(f.path, 'index.html')
       assert.equal(f.mime, 'text/html')
+      pt.destroy()
+      done()
     })
   })
 
-  it('torrent.getFile() - non normalized path', function () {
+  it('file.getStream()', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    return pt.add(base + 'foobar.txt.torrent')
-    .then(torrent => {
-      assert.notEqual(torrent.getFile('foobar.txt'), undefined)
-      assert.notEqual(torrent.getFile('/foobar.txt'), undefined)
-      assert.notEqual(torrent.getFile('/foo/../foobar.txt'), undefined)
-      assert.notEqual(torrent.getFile('/./foobar.txt'), undefined)
-    })
-    .then(() => pt.destroy())
-  })
-
-  it('file.getStream()', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => {
-      let stream = torrent.getFile('foobar.txt').getStream()
+    var opts = {webseeds: new URL(base + 'foobar.txt', location.origin).toString()}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, t) {
+      assert.equal(err, null)
+      var stream = t.getFile('foobar.txt').getStream()
       assert.equal(stream.length, 7)
-      return nodeStreamToString(stream)
+      nodeStreamToString(stream, function (err, text) {
+        assert.equal(err, null)
+        assert.equal(text, 'foobar\n')
+        pt.destroy()
+        done()
+      })
     })
-    .then(text => assert.equal(text, 'foobar\n'))
-    .then(() => pt.destroy())
   })
 
-  it('file.getStream() - ranged', function () {
+  it('torrent.getStream()', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => {
-      let stream = torrent.getFile('foobar.txt').getStream({start: 2, end: 4})
+    var opts = {webseeds: new URL(base + 'foobar.txt', location.origin).toString()}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, t) {
+      assert.equal(err, null)
+      var stream = t.getStream()
+      assert.equal(stream.length, 7)
+      nodeStreamToString(stream, function (err, text) {
+        assert.equal(err, null)
+        assert.equal(text, 'foobar\n')
+        pt.destroy()
+        done()
+      })
+    })
+  })
+
+  it('add(buffer) - Using torrent defined webseed', function (done) {
+    simpleGet.concat(base + 'foobar.txt.torrent', function (err, res, data) {
+      assert.equal(err, null)
+      assert.equal(res.statusCode, 200)
+
+      var pt = new PermaTorrent({namespace: random()})
+      var meta = parseTorrent(data)
+      meta.urlList.push(new URL(base + 'foobar.txt', location.origin).toString())
+      pt.add(parseTorrent.encode(meta), function (err, t) {
+        assert.equal(err, null)
+        nodeStreamToString(t.files[0].getStream(), function (err, text) {
+          assert.equal(err, null)
+          assert.equal(text, 'foobar\n')
+          pt.destroy()
+          done()
+        })
+      })
+    })
+  })
+
+  it('file.getStream() - ranged', function (done) {
+    var pt = new PermaTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      var stream = torrent.getFile('foobar.txt').getStream({start: 2, end: 4})
       assert.equal(stream.length, 3)
-      return nodeStreamToString(stream)
+      nodeStreamToString(stream, function (err, text) {
+        assert.equal(err, null)
+        assert.equal(text, 'oba')
+        pt.destroy()
+        done()
+      })
     })
-    .then(text => assert.equal(text, 'oba'))
-    .then(() => pt.destroy())
   })
 
-  it('file.getStream() - bad range', function () {
+  it('file.getStream() - bad range', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => {
-      let file = torrent.getFile('foobar.txt')
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      var file = torrent.getFile('foobar.txt')
       assert.throws(() => file.getStream({start: -1, end: 4}))
       assert.throws(() => file.getStream({start: 1, end: 0}))
       assert.throws(() => file.getStream({start: 8, end: 9}))
       pt.destroy()
+      done()
     })
   })
 
-  it('file.getStream() - full range', function () {
+  it('file.getStream() - full range', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => {
-      let stream = torrent.getFile('foobar.txt').getStream({start: 0, end: 6})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      var stream = torrent.getFile('foobar.txt').getStream({start: 0, end: 6})
       assert.equal(stream.length, 7)
-      return nodeStreamToString(stream)
-    })
-    .then(text => assert.equal(text, 'foobar\n'))
-    .then(() => pt.destroy())
-  })
-
-  it('file.getStream() - zero range', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => {
-      let stream = torrent.getFile('foobar.txt').getStream({start: 0, end: 0})
-      assert.equal(stream.length, 1)
-      return nodeStreamToString(stream)
-    })
-    .then(text => assert.equal(text, 'f'))
-    .then(() => pt.destroy())
-  })
-
-  it('file.getBlob()', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => torrent.getFile('foobar.txt').getBlob())
-    .then(blob => {
-      assert.equal(blob.type, 'text/plain')
-      return blobToString(blob)
-    })
-    .then(text => assert.equal(text, 'foobar\n'))
-    .then(() => pt.destroy())
-  })
-
-  it('file.getBlob() - ranged', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => torrent.getFile('foobar.txt').getBlob({start: 2, end: 4}))
-    .then(blob => {
-      assert.equal(blob.type, 'text/plain')
-      return blobToString(blob)
-    })
-    .then(text => assert.equal(text, 'oba'))
-    .then(() => pt.destroy())
-  })
-
-  it('file.getBlob() - check mime type', function () {
-    var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'index.html.torrent', {webseeds: base + 'index.html'})
-      .then(torrent => torrent.getFile('index.html').getBlob())
-      .then(blob => {
-        assert.equal(blob.type, 'text/html')
+      nodeStreamToString(stream, function (err, text) {
+        assert.equal(err, null)
+        assert.equal(text, 'foobar\n')
+        pt.destroy()
+        done()
       })
-      .then(() => pt.destroy())
+    })
   })
 
-  it('file.getWebStream()', function () {
-    if (typeof ReadableStream === 'undefined') return Promise.resolve()
+  it('file.getStream() - zero range', function (done) {
     var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => {
-      let webStream = torrent.getFile('foobar.txt').getWebStream()
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      var stream = torrent.getFile('foobar.txt').getStream({start: 0, end: 0})
+      assert.equal(stream.length, 1)
+      nodeStreamToString(stream, function (err, text) {
+        assert.equal(err, null)
+        assert.equal(text, 'f')
+        pt.destroy()
+        done()
+      })
+    })
+  })
+
+  it('file.getBlob()', function (done) {
+    var pt = new PermaTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      torrent.getFile('foobar.txt').getBlob(function (err, blob) {
+        assert.equal(err, null)
+        assert.equal(blob.type, 'text/plain')
+        blobToString(blob, function (err, text) {
+          assert.equal(err, null)
+          assert.equal(text, 'foobar\n')
+          pt.destroy()
+          done()
+        })
+      })
+    })
+  })
+
+  it('file.getBlob() - ranged', function (done) {
+    var pt = new PermaTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      torrent.getFile('foobar.txt').getBlob({start: 2, end: 4}, function (err, blob) {
+        assert.equal(err, null)
+        assert.equal(blob.type, 'text/plain')
+        blobToString(blob, function (err, text) {
+          assert.equal(err, null)
+          assert.equal(text, 'oba')
+          pt.destroy()
+          done()
+        })
+      })
+    })
+  })
+
+  it('file.getWebStream()', function (done) {
+    if (typeof ReadableStream === 'undefined') return done()
+
+    var opts = {webseeds: base + 'foobar.txt'}
+    var pt = new PermaTorrent({namespace: random()})
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      var webStream = torrent.getFile('foobar.txt').getWebStream()
       assert.equal(webStream.length, 7)
-      return webStreamToString(webStream)
+      webStreamToString(webStream, function (err, text) {
+        assert.equal(err, null)
+        assert.equal(text, 'foobar\n')
+        pt.destroy()
+        done()
+      })
     })
-    .then(text => assert.equal(text, 'foobar\n'))
-    .then(() => pt.destroy())
   })
 
-  it('file.getWebStream() - ranged', function () {
-    if (typeof ReadableStream === 'undefined') return Promise.resolve()
+  it('file.getWebStream() - ranged', function (done) {
+    if (typeof ReadableStream === 'undefined') return done()
+
     var pt = new PermaTorrent({namespace: random()})
-    pt.startSeeder()
-    return pt.add(base + 'foobar.txt.torrent', {webseeds: base + 'foobar.txt'})
-    .then(torrent => {
-      let webStream = torrent.getFile('foobar.txt').getWebStream({start: 2, end: 4})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+      var webStream = torrent.getFile('foobar.txt').getWebStream({start: 2, end: 4})
       assert.equal(webStream.length, 3)
-      return webStreamToString(webStream)
+      webStreamToString(webStream, function (err, text) {
+        assert.equal(err, null)
+        assert.equal(text, 'oba')
+        pt.destroy()
+        done()
+      })
     })
-    .then(text => assert.equal(text, 'oba'))
-    .then(() => pt.destroy())
   })
 })
 
-function nodeStreamToString (stream) {
-  return new Promise(function (resolve, reject) {
-    let buffer = ''
-    stream.on('data', chunk => {
-      buffer += chunk.toString()
-    })
-    stream.on('end', (c) => {
-      resolve(buffer)
-    })
-    stream.on('error', (err) => {
-      reject(err)
-    })
+function nodeStreamToString (stream, cb) {
+  var buffer = ''
+  stream.on('data', chunk => {
+    buffer += chunk.toString()
+  })
+  stream.on('end', (c) => {
+    cb(null, buffer)
+  })
+  stream.on('error', (err) => {
+    cb(err)
   })
 }
 
-function blobToString (blob) {
-  return new Promise(function (resolve, reject) {
-    let fr = new window.FileReader()
-    fr.onload = onload
-    fr.onerror = onerror
-    fr.readAsText(blob)
+function blobToString (blob, cb) {
+  var fr = new window.FileReader()
+  fr.onload = onload
+  fr.onerror = onerror
+  fr.readAsText(blob)
 
-    function onload () {
-      resolve(fr.result)
-    }
+  function onload () {
+    cb(null, fr.result)
+  }
 
-    function onerror () {
-      reject(fr.error)
-    }
-  })
+  function onerror () {
+    cb(fr.error)
+  }
 }
 
-function webStreamToString (stream) {
-  return new Promise(function (resolve, reject) {
-    let reader = stream.getReader()
-    let buffer = ''
+function webStreamToString (stream, cb) {
+  var reader = stream.getReader()
+  var buffer = ''
+  reader.read().then(onRead)
+
+  function onRead (result) {
+    if (result.done) return cb(null, buffer)
+
+    buffer += result.value.toString()
     reader.read().then(onRead)
-
-    function onRead (result) {
-      if (result.done) return resolve(buffer)
-
-      buffer += result.value.toString()
-      reader.read().then(onRead)
-    }
-  })
+  }
 }
 
 function random () {
