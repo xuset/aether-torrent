@@ -344,6 +344,29 @@ describe('PermaTorrent', function () {
       })
     })
   })
+
+  it('promises', function (done) {
+    if (typeof Promise === 'undefined') return done()
+
+    var pt = new PermaTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts)
+    .then(function (torrent) { return torrent.files[0].getBlob() })
+    .then(function (blob) {
+      return new Promise(function (resolve, reject) {
+        blobToString(blob, function (err, text) {
+          if (err) reject(err)
+          else resolve(text)
+        })
+      })
+    })
+    .then(text => {
+      assert.equal(text, 'foobar\n')
+      return pt.remove(pt.torrents[0].infoHash)
+    })
+    .then(done)
+    .catch(done)
+  })
 })
 
 function nodeStreamToString (stream, cb) {
