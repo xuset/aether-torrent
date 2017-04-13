@@ -80,14 +80,13 @@ PermaTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) {
   var infoHash = parseTorrent(torrentMetaBuffer).infoHash
   if (self.get(infoHash)) return cb(null, self.get(infoHash))
 
-  // TODO is this needed?
   var webseeds = (typeof opts.webseeds === 'string' ? [opts.webseeds] : opts.webseeds) || []
   webseeds = webseeds.map(function (url) { return new URL(url, location.origin).toString() })
 
   var rawTorrent = {
     torrentMetaBuffer: torrentMetaBuffer,
     infoHash: infoHash,
-    webseeds: webseeds // TODO change to opts
+    webseeds: webseeds
   }
 
   self._torrentStore.set(infoHash, rawTorrent, function (err) {
