@@ -12,7 +12,7 @@
     "promisize": "^1.1.1",
     "simple-get": "^2.4.0",
     "stream-to-blob": "^1.0.0",
-    "tab-elect": "^0.1.0",
+    "tab-elect": "^0.1.1",
     "webtorrent": "^0.98.0"
   },
   "devDependencies": {
