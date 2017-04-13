@@ -1,9 +1,10 @@
 module.exports = PermaTorrent
 
-/* global fetch, URL, location */
+/* global URL, location */
 
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
+var simpleGet = require('simple-get')
 var IdbKvStore = require('idb-kv-store')
 var parseTorrent = require('parse-torrent-file')
 var promisize = require('promisize')
@@ -23,8 +24,9 @@ function PermaTorrent (opts) {
 
   self._namespace = opts.namespace || 'permatorrent'
   self._torrentStore = new IdbKvStore(self._namespace + '-torrents')
-
+  self._tabElect = null
   self._seeder = null
+
   if (typeof window !== 'undefined') {
     self._seeder = new Seeder() // TODO pass opts to wt
     self._tabElect = new TabElect(self._namespace + '-tabelect')
@@ -33,12 +35,12 @@ function PermaTorrent (opts) {
   }
 
   self._torrentStore.on('set', function (change) {
-    self._add(change.value)
+    self._onAdd(change.value)
   })
 
   self._torrentStore.values(function (err, values) {
     if (err) return self.emit('error', err)
-    values.forEach(function (v) { self._add(v) })
+    values.forEach(function (v) { self._onAdd(v) })
     self.emit('ready')
   })
 }
@@ -51,28 +53,31 @@ PermaTorrent.prototype.get = function (infoHash) {
   return undefined
 }
 
-PermaTorrent.prototype.add = function (torrentMetaBuffer, opts, cb) {
+PermaTorrent.prototype.add = function (torrentId, opts, cb) {
   var self = this
   if (self.destroyed) throw new Error('Instance is destroyed')
-  if (typeof opts === 'function') return self.add(torrentMetaBuffer, null, opts)
+  if (typeof opts === 'function') return self.add(torrentId, null, opts)
   opts = opts || {}
   cb = promisize(cb)
 
-  if (typeof torrentMetaBuffer === 'string') {
-    // simpleGet(torrentMetaBuffer, function (err, res, data) {
-    //   if (err) return cb(err)
-    //   if (res.statusCode != 200) return cb(new Error('Could not retreive torrent file over http'))
-    //   self.add(data, opts, cb)
-    // })
-    fetch(torrentMetaBuffer)
-    .then(function (response) { return response.arrayBuffer() })
-    .then(function (buffer) { self.add(buffer, opts, cb) })
-    return cb.promise
+  if (typeof torrentId === 'string') { // torrentId is a url
+    simpleGet.concat(torrentId, function (err, res, data) {
+      if (err) return cb(err)
+      if (res.statusCode !== 200) return cb(new Error('Server sent a non 200 http response'))
+      self._addFromBuffer(data, opts, cb)
+    })
+  } else {
+    self._addFromBuffer(torrentId, opts, cb)
   }
 
-  if (!Buffer.isBuffer(torrentMetaBuffer)) torrentMetaBuffer = new Buffer(torrentMetaBuffer)
+  return cb.promise
+}
 
-  var infoHash = parseTorrent(new Buffer(torrentMetaBuffer)).infoHash
+PermaTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) {
+  var self = this
+
+  torrentMetaBuffer = new Buffer(torrentMetaBuffer)
+  var infoHash = parseTorrent(torrentMetaBuffer).infoHash
   if (self.get(infoHash)) return cb(null, self.get(infoHash))
 
   // TODO is this needed?
@@ -87,21 +92,20 @@ PermaTorrent.prototype.add = function (torrentMetaBuffer, opts, cb) {
 
   self._torrentStore.set(infoHash, rawTorrent, function (err) {
     if (err) return cb(err)
-    cb(null, self._add(rawTorrent))
+    self._onAdd(rawTorrent)
+    cb(null, self.get(rawTorrent.infoHash))
   })
-  return cb.promise
 }
 
-PermaTorrent.prototype._add = function (rawTorrent) {
+PermaTorrent.prototype._onAdd = function (rawTorrent) {
   var self = this
   if (self.destroyed) return
-
   if (self.get(rawTorrent.infoHash)) return
+
   var torrent = new Torrent(rawTorrent, self._namespace)
   self.torrents.push(torrent)
   if (self._seeder) self._seeder.add(torrent)
   self.emit('torrent', torrent)
-  return torrent
 }
 
 PermaTorrent.prototype.remove = function (infoHash, cb) {
