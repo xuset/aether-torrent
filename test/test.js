@@ -2,17 +2,17 @@
 
 // TODO add index.html to multi file torrent
 
-var PermaTorrent = require('../')
+var AetherTorrent = require('../')
 var assert = require('assert')
 var simpleGet = require('simple-get')
 var parseTorrent = require('parse-torrent-file')
 var base = '/base/test/www/'
 
-describe('PermaTorrent', function () {
+describe('AetherTorrent', function () {
   this.timeout(4000)
 
   it('torrent array empty', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.on('ready', function () {
       assert.equal(pt.torrents.length, 0)
       pt.destroy()
@@ -21,7 +21,7 @@ describe('PermaTorrent', function () {
   })
 
   it('add(url)', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.add(base + 'foobar.txt.torrent', function (err, torrent) {
       assert.equal(null, err)
       assert.equal(torrent.closed, false)
@@ -35,8 +35,8 @@ describe('PermaTorrent', function () {
 
   it('add(url) - in different instances', function (done) {
     var namespace = random()
-    var pt1 = new PermaTorrent({namespace: namespace})
-    var pt2 = new PermaTorrent({namespace: namespace})
+    var pt1 = new AetherTorrent({namespace: namespace})
+    var pt2 = new AetherTorrent({namespace: namespace})
 
     pt2.on('torrent', function (t) {
       assert.equal(pt2.torrents.length, 1)
@@ -52,7 +52,7 @@ describe('PermaTorrent', function () {
   })
 
   it('add(url) then remove()', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.add(base + 'foobar.txt.torrent', function (err, t) {
       assert.equal(err, null)
       pt.remove(t.infoHash, function (err) {
@@ -66,8 +66,8 @@ describe('PermaTorrent', function () {
 
   it('add(url) then remove() - in different instances', function (done) {
     var namespace = random()
-    var pt1 = new PermaTorrent({namespace: namespace})
-    var pt2 = new PermaTorrent({namespace: namespace})
+    var pt1 = new AetherTorrent({namespace: namespace})
+    var pt2 = new AetherTorrent({namespace: namespace})
 
     pt2.on('torrent', function (t) {
       assert.equal(pt2.torrents.length, 1)
@@ -87,7 +87,7 @@ describe('PermaTorrent', function () {
   })
 
   it('remove() - non existent', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.remove('f00ba70000000000000000000000000000000000', function (err) {
       assert.equal(null, err)
       pt.destroy()
@@ -96,7 +96,7 @@ describe('PermaTorrent', function () {
   })
 
   it('add(url) - for multi file torrent', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.add(base + 'multi.torrent', function (err, t) {
       assert.equal(err, null)
 
@@ -121,7 +121,7 @@ describe('PermaTorrent', function () {
   })
 
   it('torrent.getFile()', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.add(base + 'foobar.txt.torrent', function (err, t) {
       assert.equal(err, null)
       var f = t.getFile('foobar.txt')
@@ -135,7 +135,7 @@ describe('PermaTorrent', function () {
   })
 
   it('torrent.getFile() - non normalized path', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.add(base + 'foobar.txt.torrent', function (err, t) {
       assert.equal(err, null)
       assert.notEqual(t.getFile('foobar.txt'), undefined)
@@ -148,7 +148,7 @@ describe('PermaTorrent', function () {
   })
 
   it('torrent.getFile() - check mime type', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.add(base + 'index.html.torrent', function (err, t) {
       assert.equal(err, null)
       var f = t.getFile('index.html')
@@ -160,7 +160,7 @@ describe('PermaTorrent', function () {
   })
 
   it('file.getStream()', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: new URL(base + 'foobar.txt', location.origin).toString()}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, t) {
       assert.equal(err, null)
@@ -176,7 +176,7 @@ describe('PermaTorrent', function () {
   })
 
   it('torrent.getStream()', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: new URL(base + 'foobar.txt', location.origin).toString()}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, t) {
       assert.equal(err, null)
@@ -196,7 +196,7 @@ describe('PermaTorrent', function () {
       assert.equal(err, null)
       assert.equal(res.statusCode, 200)
 
-      var pt = new PermaTorrent({namespace: random()})
+      var pt = new AetherTorrent({namespace: random()})
       var meta = parseTorrent(data)
       meta.urlList.push(new URL(base + 'foobar.txt', location.origin).toString())
       pt.add(parseTorrent.encode(meta), function (err, t) {
@@ -212,7 +212,7 @@ describe('PermaTorrent', function () {
   })
 
   it('file.getStream() - ranged', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
@@ -228,7 +228,7 @@ describe('PermaTorrent', function () {
   })
 
   it('file.getStream() - bad range', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
@@ -242,7 +242,7 @@ describe('PermaTorrent', function () {
   })
 
   it('file.getStream() - full range', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
@@ -258,7 +258,7 @@ describe('PermaTorrent', function () {
   })
 
   it('file.getStream() - zero range', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
@@ -274,7 +274,7 @@ describe('PermaTorrent', function () {
   })
 
   it('file.getBlob()', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
@@ -292,7 +292,7 @@ describe('PermaTorrent', function () {
   })
 
   it('file.getBlob() - ranged', function (done) {
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
@@ -313,7 +313,7 @@ describe('PermaTorrent', function () {
     if (typeof ReadableStream === 'undefined') return done()
 
     var opts = {webseeds: base + 'foobar.txt'}
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
       var webStream = torrent.getFile('foobar.txt').getWebStream()
@@ -330,7 +330,7 @@ describe('PermaTorrent', function () {
   it('file.getWebStream() - ranged', function (done) {
     if (typeof ReadableStream === 'undefined') return done()
 
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
       assert.equal(err, null)
@@ -348,7 +348,7 @@ describe('PermaTorrent', function () {
   it('promises', function (done) {
     if (typeof Promise === 'undefined') return done()
 
-    var pt = new PermaTorrent({namespace: random()})
+    var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: base + 'foobar.txt'}
     pt.add(base + 'foobar.txt.torrent', opts)
     .then(function (torrent) { return torrent.files[0].getBlob() })

@@ -1,4 +1,4 @@
-module.exports = PermaTorrent
+module.exports = AetherTorrent
 
 /* global URL, location */
 
@@ -12,8 +12,8 @@ var TabElect = require('tab-elect')
 var Torrent = require('./lib/torrent')
 var Seeder = require('./lib/seeder')
 
-inherits(PermaTorrent, EventEmitter)
-function PermaTorrent (opts) {
+inherits(AetherTorrent, EventEmitter)
+function AetherTorrent (opts) {
   EventEmitter.call(this)
 
   var self = this
@@ -22,7 +22,7 @@ function PermaTorrent (opts) {
 
   self.torrents = []
 
-  self._namespace = opts.namespace || 'permatorrent'
+  self._namespace = opts.namespace || 'aethertorrent'
   self._torrentStore = new IdbKvStore(self._namespace + '-torrents')
   self._tabElect = null
   self._seeder = null
@@ -45,7 +45,7 @@ function PermaTorrent (opts) {
   })
 }
 
-PermaTorrent.prototype.get = function (infoHash) {
+AetherTorrent.prototype.get = function (infoHash) {
   if (this.destroyed) throw new Error('Instance is destroyed')
   for (var i = 0; i < this.torrents.length; i++) {
     if (this.torrents[i].infoHash === infoHash) return this.torrents[i]
@@ -53,7 +53,7 @@ PermaTorrent.prototype.get = function (infoHash) {
   return undefined
 }
 
-PermaTorrent.prototype.add = function (torrentId, opts, cb) {
+AetherTorrent.prototype.add = function (torrentId, opts, cb) {
   var self = this
   if (self.destroyed) throw new Error('Instance is destroyed')
   if (typeof opts === 'function') return self.add(torrentId, null, opts)
@@ -73,7 +73,7 @@ PermaTorrent.prototype.add = function (torrentId, opts, cb) {
   return cb.promise
 }
 
-PermaTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) {
+AetherTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) {
   var self = this
 
   torrentMetaBuffer = new Buffer(torrentMetaBuffer)
@@ -96,7 +96,7 @@ PermaTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) {
   })
 }
 
-PermaTorrent.prototype._onAdd = function (rawTorrent) {
+AetherTorrent.prototype._onAdd = function (rawTorrent) {
   var self = this
   if (self.destroyed) return
   if (self.get(rawTorrent.infoHash)) return
@@ -107,7 +107,7 @@ PermaTorrent.prototype._onAdd = function (rawTorrent) {
   self.emit('torrent', torrent)
 }
 
-PermaTorrent.prototype.remove = function (infoHash, cb) {
+AetherTorrent.prototype.remove = function (infoHash, cb) {
   var self = this
   if (self.destroyed) throw new Error('Instance already destroyed')
   cb = promisize(cb)
@@ -124,7 +124,7 @@ PermaTorrent.prototype.remove = function (infoHash, cb) {
   return cb.promise
 }
 
-PermaTorrent.prototype.destroy = function () {
+AetherTorrent.prototype.destroy = function () {
   var self = this
   if (self.destroyed) return
   self.destroyed = true

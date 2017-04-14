@@ -67,7 +67,7 @@ module.exports = function (config) {
     concurrency: Infinity,
 
     sauceLabs: {
-      testName: 'perma-torrent'
+      testName: 'aether-torrent'
     },
     customLaunchers: {
       SL_Chrome: {

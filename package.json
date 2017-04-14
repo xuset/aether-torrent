@@ -1,7 +1,7 @@
 {
-  "name": "perma-torrent",
+  "name": "aether-torrent",
   "version": "0.1.0",
-  "description": "Persistent torrent client for web browsers and web workers",
+  "description": "A single webtorrent client shared by all web pages and workers",
   "main": "index.js",
   "dependencies": {
     "chunk-store-read-stream": "^1.0.0",
@@ -33,12 +33,12 @@
   "scripts": {
     "standard": "standard",
     "karma": "karma",
-    "bundle": "browserify . -s PermaTorrent | uglifyjs -m -c warnings=false > permatorrent.min.js",
+    "bundle": "browserify . -s AetherTorrent | uglifyjs -m -c warnings=false > aethertorrent.min.js",
     "test": "standard && karma start"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xuset/perma-torrent.git"
+    "url": "git+https://github.com/xuset/aether-torrent.git"
   },
   "keywords": [
     "bittorrent",
@@ -46,12 +46,13 @@
     "torrent",
     "p2p",
     "persistent",
-    "permanent"
+    "share",
+    "aether"
   ],
   "author": "xuset",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xuset/perma-torrent/issues"
+    "url": "https://github.com/xuset/aether-torrent/issues"
   },
-  "homepage": "https://github.com/xuset/perma-torrent"
+  "homepage": "https://github.com/xuset/aether-torrent"
 }
