@@ -76,7 +76,7 @@ AetherTorrent.prototype.add = function (torrentId, opts, cb) {
 AetherTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) {
   var self = this
 
-  torrentMetaBuffer = new Buffer(torrentMetaBuffer)
+  torrentMetaBuffer = Buffer.from(torrentMetaBuffer)
   var infoHash = parseTorrent(torrentMetaBuffer).infoHash
   if (self.get(infoHash)) return cb(null, self.get(infoHash))
 
