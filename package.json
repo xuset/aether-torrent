@@ -1,6 +1,6 @@
 {
   "name": "aether-torrent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A single webtorrent client shared by all web pages and workers",
   "main": "index.js",
   "dependencies": {
