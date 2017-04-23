@@ -1,5 +1,7 @@
 # aether-torrent [![Build Status](https://travis-ci.org/xuset/aether-torrent.svg?branch=master)](https://travis-ci.org/xuset/aether-torrent) [![npm](https://img.shields.io/npm/v/aether-torrent.svg)](https://npmjs.org/package/aether-torrent)
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/xuset/aether-torrent.svg)](https://greenkeeper.io/)
+
 #### A single [WebTorrent](https://webtorrent.io/) client shared by all web pages and workers
 
 [![Sauce Test Status](https://saucelabs.com/browser-matrix/xuset-perma-torrent.svg)](https://saucelabs.com/u/xuset-perma-torrent)
