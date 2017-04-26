@@ -5,15 +5,16 @@ module.exports = AetherTorrent
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
 var simpleGet = require('simple-get')
-var IdbKvStore = require('idb-kv-store')
 var parseTorrent = require('parse-torrent-file')
 var promisize = require('promisize')
 var TabElect = require('tab-elect')
+var TorrentDB = require('./lib/torrentdb.js')
 var Torrent = require('./lib/torrent')
 var Seeder = require('./lib/seeder')
 
 inherits(AetherTorrent, EventEmitter)
 function AetherTorrent (opts) {
+  if (!(this instanceof AetherTorrent)) return new AetherTorrent(opts)
   EventEmitter.call(this)
 
   var self = this
@@ -23,7 +24,7 @@ function AetherTorrent (opts) {
   self.torrents = []
 
   self._namespace = opts.namespace || 'aethertorrent'
-  self._torrentStore = new IdbKvStore(self._namespace + '-torrents')
+  self._torrentDB = new TorrentDB(self._namespace)
   self._tabElect = null
   self._seeder = null
 
@@ -34,11 +35,11 @@ function AetherTorrent (opts) {
     self._tabElect.on('deposed', self._seeder.stop.bind(self._seeder))
   }
 
-  self._torrentStore.on('set', function (change) {
-    self._onAdd(change.value)
+  self._torrentDB.on('add', function (rawTorrent) {
+    self._onAdd(rawTorrent)
   })
 
-  self._torrentStore.values(function (err, values) {
+  self._torrentDB.getAll(function (err, values) {
     if (err) return self.emit('error', err)
     values.forEach(function (v) { self._onAdd(v) })
     self.emit('ready')
@@ -89,7 +90,7 @@ AetherTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) 
     webseeds: webseeds
   }
 
-  self._torrentStore.set(infoHash, rawTorrent, function (err) {
+  self._torrentDB.add(infoHash, rawTorrent, function (err) {
     if (err) return cb(err)
     self._onAdd(rawTorrent)
     cb(null, self.get(rawTorrent.infoHash))
@@ -120,7 +121,7 @@ AetherTorrent.prototype.remove = function (infoHash, cb) {
   }
 
   if (self._seeder) self._seeder.remove(infoHash)
-  self._torrentStore.remove(infoHash, cb)
+  self._torrentDB.remove(infoHash, cb)
   return cb.promise
 }
 
@@ -131,11 +132,11 @@ AetherTorrent.prototype.destroy = function () {
 
   if (self.seeder != null) self.seeder.destroy()
   for (var infoHash in self._torrents) self._torrents[infoHash].close()
-  self._torrentStore.close()
+  self._torrentDB.close()
   self._tabElect.destroy()
 
   self._tabElect = null
   self._torrents = null
-  self._torrentStore = null
+  self._torrentDB = null
   self._seeder = null
 }
