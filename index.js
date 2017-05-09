@@ -4,8 +4,7 @@ module.exports = AetherTorrent
 
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
-var simpleGet = require('simple-get')
-var parseTorrent = require('parse-torrent-file')
+var parseTorrent = require('parse-torrent')
 var promisize = require('promisize')
 var TabElect = require('tab-elect')
 var TorrentStore = require('./lib/torrentstore')
@@ -61,55 +60,53 @@ AetherTorrent.prototype.add = function (torrentId, opts, cb) {
   opts = opts || {}
   cb = promisize(cb)
 
-  if (typeof torrentId === 'string') { // torrentId is a url
-    simpleGet.concat(torrentId, function (err, res, data) {
-      if (err) return cb(err)
-      if (res.statusCode !== 200) return cb(new Error('Server sent a non 200 http response'))
-      self._addFromBuffer(data, opts, cb)
-    })
-  } else {
-    self._addFromBuffer(torrentId, opts, cb)
+  var webseeds = (typeof opts.webseeds === 'string' ? [opts.webseeds] : opts.webseeds) || []
+  webseeds = webseeds.map(function (url) { return new URL(url, location.origin).toString() })
+
+  if (typeof torrentId === 'string' && torrentId.startsWith('/')) {
+    torrentId = new URL(torrentId, location.origin).toString()
   }
+
+  parseTorrent.remote(torrentId, function (err, torrentMeta) {
+    if (err) return cb(err)
+    if (self.get(torrentMeta.infoHash)) return cb(null, self.get(torrentMeta.infoHash))
+    var rawTorrent = {
+      magnetURI: parseTorrent.toMagnetURI(torrentMeta),
+      infoHash: torrentMeta.infoHash,
+      webseeds: webseeds
+    }
+    // if the full meta data exists
+    if (torrentMeta.info) rawTorrent.torrentMetaBuffer = parseTorrent.toTorrentFile(torrentMeta)
+
+    self._torrentStore.add(torrentMeta.infoHash, rawTorrent, function (err) {
+      if (err) return cb(err)
+      self._onAdd(rawTorrent, cb)
+    })
+  })
 
   return cb.promise
 }
 
-AetherTorrent.prototype._addFromBuffer = function (torrentMetaBuffer, opts, cb) {
-  var self = this
-
-  torrentMetaBuffer = Buffer.from(torrentMetaBuffer)
-  var infoHash = parseTorrent(torrentMetaBuffer).infoHash
-  if (self.get(infoHash)) return cb(null, self.get(infoHash))
-
-  var webseeds = (typeof opts.webseeds === 'string' ? [opts.webseeds] : opts.webseeds) || []
-  webseeds = webseeds.map(function (url) { return new URL(url, location.origin).toString() })
-
-  var rawTorrent = {
-    torrentMetaBuffer: torrentMetaBuffer,
-    infoHash: infoHash,
-    webseeds: webseeds
-  }
-
-  self._torrentStore.add(infoHash, rawTorrent, function (err) {
-    if (err) return cb(err)
-    self._onAdd(rawTorrent)
-    cb(null, self.get(rawTorrent.infoHash))
-  })
-}
-
-AetherTorrent.prototype._onAdd = function (rawTorrent) {
+AetherTorrent.prototype._onAdd = function (rawTorrent, cb) {
   var self = this
   if (self.destroyed) return
-  if (self.get(rawTorrent.infoHash)) return
 
-  var torrent = new Torrent(rawTorrent.infoHash, rawTorrent.webseeds, self._namespace)
-  torrent.on('ready', onready)
-  torrent.updateMeta(parseTorrent(Buffer.from(rawTorrent.torrentMetaBuffer)))
+  // Torrents are 're-added' when the torrentMeta is retreived from peers
+  var torrent = self.get(rawTorrent.infoHash)
+  if (!torrent) {
+    torrent = new Torrent(rawTorrent.infoHash, rawTorrent.webseeds, self._namespace)
+    torrent.once('ready', onready)
+    self.torrents.push(torrent)
+  }
+
+  torrent.updateMeta(parseTorrent(rawTorrent.torrentMetaBuffer
+                     ? Buffer.from(rawTorrent.torrentMetaBuffer)
+                     : rawTorrent.magnetURI))
+  if (self._seeder) self._seeder.add(torrent)
 
   function onready () {
-    if (self._seeder) self._seeder.add(torrent)
-    self.torrents.push(torrent)
     self.emit('torrent', torrent)
+    if (cb) cb(null, torrent)
   }
 }
 
