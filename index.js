@@ -94,7 +94,8 @@ AetherTorrent.prototype._onAdd = function (rawTorrent, cb) {
   // Torrents are 're-added' when the torrentMeta is retreived from peers
   var torrent = self.get(rawTorrent.infoHash)
   if (!torrent) {
-    torrent = new Torrent(rawTorrent.infoHash, rawTorrent.webseeds, self._namespace)
+    var torrentDB = self._torrentStore.connectTorrentDB(rawTorrent.infoHash)
+    torrent = new Torrent(rawTorrent.infoHash, rawTorrent.webseeds, torrentDB)
     torrent.once('ready', onready)
     self.torrents.push(torrent)
   }

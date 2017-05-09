@@ -5,7 +5,8 @@
 var AetherTorrent = require('../')
 var assert = require('assert')
 var simpleGet = require('simple-get')
-var parseTorrent = require('parse-torrent-file')
+var parseTorrent = require('parse-torrent')
+var WebTorrent = require('webtorrent')
 var base = '/base/test/www/'
 
 describe('AetherTorrent', function () {
@@ -199,7 +200,7 @@ describe('AetherTorrent', function () {
       var pt = new AetherTorrent({namespace: random()})
       var meta = parseTorrent(data)
       meta.urlList.push(new URL(base + 'foobar.txt', location.origin).toString())
-      pt.add(parseTorrent.encode(meta), function (err, t) {
+      pt.add(parseTorrent.toTorrentFile(meta), function (err, t) {
         assert.equal(err, null)
         nodeStreamToString(t.files[0].getStream(), function (err, text) {
           assert.equal(err, null)
@@ -366,6 +367,30 @@ describe('AetherTorrent', function () {
     })
     .then(done)
     .catch(done)
+  })
+})
+
+it('add(magnetURI) and stream file', function (done) {
+  var pt = new AetherTorrent({namespace: random()})
+  var seeder = new WebTorrent()
+  simpleGet.concat(base + 'foobar.txt', function (err, res, data) {
+    assert.equal(err, null)
+    assert.equal(res.statusCode, 200)
+    data.name = 'foobar.txt'
+    seeder.seed(data, function (torrent) {
+      pt.add(torrent.magnetURI, function (err, t) {
+        assert.equal(err, null)
+        var stream = t.files[0].getStream()
+        assert.equal(stream.length, 7)
+        nodeStreamToString(stream, function (err, text) {
+          assert.equal(err, null)
+          assert.equal(text, 'foobar\n')
+          pt.destroy()
+          seeder.destroy()
+          done()
+        })
+      })
+    })
   })
 })
 
