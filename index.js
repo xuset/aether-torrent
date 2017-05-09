@@ -102,10 +102,15 @@ AetherTorrent.prototype._onAdd = function (rawTorrent) {
   if (self.destroyed) return
   if (self.get(rawTorrent.infoHash)) return
 
-  var torrent = new Torrent(rawTorrent, self._namespace)
-  self.torrents.push(torrent)
-  if (self._seeder) self._seeder.add(torrent)
-  self.emit('torrent', torrent)
+  var torrent = new Torrent(rawTorrent.infoHash, rawTorrent.webseeds, self._namespace)
+  torrent.on('ready', onready)
+  torrent.updateMeta(parseTorrent(Buffer.from(rawTorrent.torrentMetaBuffer)))
+
+  function onready () {
+    if (self._seeder) self._seeder.add(torrent)
+    self.torrents.push(torrent)
+    self.emit('torrent', torrent)
+  }
 }
 
 AetherTorrent.prototype.remove = function (infoHash, cb) {
