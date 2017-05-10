@@ -69,6 +69,7 @@ AetherTorrent.prototype.add = function (torrentId, opts, cb) {
 
   parseTorrent.remote(torrentId, function (err, torrentMeta) {
     if (err) return cb(err)
+    if (self.destroyed) return
     if (self.get(torrentMeta.infoHash)) return cb(null, self.get(torrentMeta.infoHash))
     var rawTorrent = {
       magnetURI: parseTorrent.toMagnetURI(torrentMeta),
@@ -106,6 +107,7 @@ AetherTorrent.prototype._onAdd = function (rawTorrent, cb) {
   if (self._seeder) self._seeder.add(torrent)
 
   function onready () {
+    if (self.destroyed) return
     self.emit('torrent', torrent)
     if (cb) cb(null, torrent)
   }
@@ -133,13 +135,13 @@ AetherTorrent.prototype.destroy = function () {
   if (self.destroyed) return
   self.destroyed = true
 
+  for (var infoHash in self.torrents) self.torrents[infoHash].close()
   if (self.seeder != null) self.seeder.destroy()
-  for (var infoHash in self._torrents) self._torrents[infoHash].close()
   self._torrentStore.close()
   self._tabElect.destroy()
 
   self._tabElect = null
-  self._torrents = null
+  self.torrents = null
   self._torrentStore = null
   self._seeder = null
 }
