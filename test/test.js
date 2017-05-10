@@ -370,7 +370,7 @@ describe('AetherTorrent', function () {
   })
 })
 
-it('add(magnetURI) and stream file', function (done) {
+it.skip('add(magnetURI) and stream file', function (done) {
   var pt = new AetherTorrent({namespace: random()})
   var seeder = new WebTorrent()
   simpleGet.concat(base + 'foobar.txt', function (err, res, data) {
