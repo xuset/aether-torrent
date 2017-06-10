@@ -135,6 +135,8 @@ AetherTorrent.prototype.destroy = function () {
   if (self.destroyed) return
   self.destroyed = true
 
+  console.log('-------DESTROY', self._namespace)
+
   for (var infoHash in self.torrents) self.torrents[infoHash].close()
   if (self.seeder != null) self.seeder.destroy()
   self._torrentStore.close()

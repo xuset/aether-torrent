@@ -74,6 +74,7 @@ describe('AetherTorrent', function () {
       assert.equal(pt2.torrents.length, 1)
       pt2.remove(t.infoHash, function (err) {
         assert.equal(err, null)
+        console.log('-----REMOVE', namespace, pt1.destroyed)
         assert.equal(pt2.torrents.length, 0)
         assert.equal(pt1.torrents.length, 1)
         pt1.destroy()
