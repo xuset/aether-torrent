@@ -67,6 +67,8 @@ AetherTorrent.prototype.add = function (torrentId, opts, cb) {
     torrentId = new URL(torrentId, location.origin).toString()
   }
 
+  if (torrentId instanceof ArrayBuffer) torrentId = Buffer.from(torrentId)
+
   parseTorrent.remote(torrentId, function (err, torrentMeta) {
     if (err) return cb(err)
     if (self.destroyed) return
