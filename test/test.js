@@ -347,6 +347,38 @@ describe('AetherTorrent', function () {
     })
   })
 
+  it('file.renderTo()', function (done) {
+    var pt = new AetherTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+
+      var tempElem = document.createElement('iframe')
+      document.body.append(tempElem)
+
+      torrent.getFile('foobar.txt').renderTo(tempElem, function (err) {
+        assert.equal(err, null)
+        done()
+      })
+    })
+  })
+
+  it('file.appendTo()', function (done) {
+    var pt = new AetherTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+
+      var tempElem = document.createElement('div')
+      document.body.append(tempElem)
+
+      torrent.getFile('foobar.txt').appendTo(tempElem, function (err) {
+        assert.equal(err, null)
+        done()
+      })
+    })
+  })
+
   it('promises', function (done) {
     if (typeof Promise === 'undefined') return done()
 
