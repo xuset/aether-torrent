@@ -393,6 +393,20 @@ describe('AetherTorrent', function () {
     })
   })
 
+  it('file.getBlobURL()', function (done) {
+    var pt = new AetherTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+
+      torrent.getFile('foobar.txt').getBlobURL(function (err, url) {
+        assert.equal(err, null)
+        assert.ok(typeof url === 'string')
+        done()
+      })
+    })
+  })
+
   it('promises', function (done) {
     if (typeof Promise === 'undefined') return done()
 
