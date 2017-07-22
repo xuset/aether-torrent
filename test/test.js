@@ -379,6 +379,20 @@ describe('AetherTorrent', function () {
     })
   })
 
+  it('file.getBuffer()', function (done) {
+    var pt = new AetherTorrent({namespace: random()})
+    var opts = {webseeds: base + 'foobar.txt'}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, torrent) {
+      assert.equal(err, null)
+
+      torrent.getFile('foobar.txt').getBuffer(function (err, buffer) {
+        assert.equal(err, null)
+        assert.ok(buffer.equals(Buffer.from('foobar\n')))
+        done()
+      })
+    })
+  })
+
   it('promises', function (done) {
     if (typeof Promise === 'undefined') return done()
 
