@@ -17,7 +17,7 @@
     "stream-to-blob-url": "^2.1.0",
     "stream-with-known-length-to-buffer": "^1.0.0",
     "tab-elect": "^0.1.2",
-    "webtorrent": "^0.98.18"
+    "webtorrent": "^0.99.0"
   },
   "devDependencies": {
     "browserify": "^14.3.0",
