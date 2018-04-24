@@ -12,7 +12,7 @@
     "promisize": "^1.1.2",
     "readable-stream-node-to-web": "^1.0.0",
     "render-media": "^2.10.0",
-    "simple-get": "^2.5.1",
+    "simple-get": "^3.0.0",
     "stream-to-blob": "^1.0.0",
     "stream-to-blob-url": "^2.1.0",
     "stream-with-known-length-to-buffer": "^1.0.0",
