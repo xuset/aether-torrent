@@ -21,6 +21,7 @@ function AetherTorrent (opts) {
   self.destroyed = false
 
   self.torrents = []
+  self.ready = false
 
   self._namespace = opts.namespace || 'aethertorrent'
   self._torrentStore = new TorrentStore(self._namespace)
@@ -41,6 +42,7 @@ function AetherTorrent (opts) {
   self._torrentStore.getAll(function (err, values) {
     if (err) return self.emit('error', err)
     values.forEach(function (v) { self._onAdd(v) })
+    self.ready = true
     self.emit('ready')
   })
 }
@@ -59,6 +61,14 @@ AetherTorrent.prototype.add = function (torrentId, opts, cb) {
   if (typeof opts === 'function') return self.add(torrentId, null, opts)
   opts = opts || {}
   cb = promisize(cb)
+
+  if (!self.ready) {
+    self.once('ready', function () {
+      if (self.destroyed) return
+      self.add(torrentId, opts, cb)
+    })
+    return cb.promise
+  }
 
   var webseeds = (typeof opts.webseeds === 'string' ? [opts.webseeds] : opts.webseeds) || []
   webseeds = webseeds.map(function (url) { return new URL(url, location.origin).toString() })
@@ -120,6 +130,14 @@ AetherTorrent.prototype.remove = function (infoHash, cb) {
   if (self.destroyed) throw new Error('Instance already destroyed')
   cb = promisize(cb)
 
+  if (!self.ready) {
+    self.once('ready', function () {
+      if (self.destroyed) return
+      self.remove(infoHash, cb)
+    })
+    return cb.promise
+  }
+
   var index = self.torrents.findIndex(function (t) { return t.infoHash === infoHash })
   var torrent = self.torrents[index]
   if (torrent) {
@@ -136,8 +154,6 @@ AetherTorrent.prototype.destroy = function () {
   var self = this
   if (self.destroyed) return
   self.destroyed = true
-
-  console.log('-------DESTROY', self._namespace)
 
   for (var infoHash in self.torrents) self.torrents[infoHash].close()
   if (self.seeder != null) self.seeder.destroy()
