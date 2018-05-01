@@ -2,8 +2,6 @@
 
 #### A single [WebTorrent](https://webtorrent.io/) client shared by all web pages and workers
 
-[![Sauce Test Status](https://saucelabs.com/browser-matrix/xuset-perma-torrent.svg)](https://saucelabs.com/u/xuset-perma-torrent)
-
 Each AetherTorrent instance shares a single [WebTorrent](https://webtorrent.io/) client between all web pages and workers. So when a torrent is added in one context all other contexts are able to see that this torrent was added and can stream the downloading torrent. The benefit of this is that through behind-the-scene delegation only one web page does the actual downloading and seeding of the torrent instead of each web page. Additionally web workers are able to add and stream torrents just as web pages can. This shared client architecture also inherently persists it's state to IndexedDB so when a web page is reponed after the browser closed, it still has access to all the added torrents and their data.
 
 This is a web-only module that can be used with bundlers like browserify or the `aethertorrent.min.js` script can be included which adds `AetherTorrent` to the global scope.
