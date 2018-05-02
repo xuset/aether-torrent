@@ -114,8 +114,8 @@ AetherTorrent.prototype._onAdd = function (rawTorrent, cb) {
   }
 
   torrent.updateMeta(parseTorrent(rawTorrent.torrentMetaBuffer
-                     ? Buffer.from(rawTorrent.torrentMetaBuffer)
-                     : rawTorrent.magnetURI))
+    ? Buffer.from(rawTorrent.torrentMetaBuffer)
+    : rawTorrent.magnetURI))
   if (self._seeder) self._seeder.add(torrent)
 
   function onready () {
