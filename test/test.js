@@ -176,6 +176,35 @@ describe('AetherTorrent', function () {
     })
   })
 
+  it('file.getStream() for two files in different torrents', function (done) {
+    var pt = new AetherTorrent({namespace: random()})
+    var opts = {webseeds: new URL(base + 'foobar.txt', location.origin).toString()}
+    pt.add(base + 'foobar.txt.torrent', opts, function (err, t1) {
+      assert.equal(err, null)
+
+      opts = {webseeds: new URL(base + 'index.html', location.origin).toString()}
+      pt.add(base + 'index.html.torrent', opts, function (err, t2) {
+        assert.equal(err, null)
+
+        var stream2 = t2.getFile('index.html').getStream()
+        assert(stream2.length > 0)
+        nodeStreamToString(stream2, function (err, text) {
+          assert.equal(err, null)
+          assert.equal(text.indexOf('<html>'), 0)
+
+          var stream1 = t1.getFile('foobar.txt').getStream()
+          assert.equal(stream1.length, 7)
+          nodeStreamToString(stream1, function (err, text) {
+            assert.equal(err, null)
+            assert.equal(text, 'foobar\n')
+            pt.destroy()
+            done()
+          })
+        })
+      })
+    })
+  })
+
   it('torrent.getStream()', function (done) {
     var pt = new AetherTorrent({namespace: random()})
     var opts = {webseeds: new URL(base + 'foobar.txt', location.origin).toString()}
