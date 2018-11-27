@@ -7,7 +7,7 @@
     "chunk-store-read-stream": "^1.0.1",
     "idb-kv-store": "^4.3.1",
     "indexeddb-chunk-store": "^2.2.1",
-    "mime": "^2.3.1",
+    "mime": "2.3.1",
     "parse-torrent": "^6.0.0",
     "promisize": "^1.1.2",
     "readable-stream-node-to-web": "^1.0.0",
