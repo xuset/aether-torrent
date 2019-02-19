@@ -29,7 +29,7 @@
     "karma-mocha": "^1.3.0",
     "mocha": "^5.1.1",
     "standard": "^11.0.1",
-    "watchify": "^3.11.0"
+    "watchify": "^3.11.1"
   },
   "scripts": {
     "standard": "standard",
