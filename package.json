@@ -11,7 +11,7 @@
     "parse-torrent": "^6.0.0",
     "promisize": "^1.1.2",
     "readable-stream-node-to-web": "^1.0.0",
-    "render-media": "^3.0.0",
+    "render-media": "^3.3.1",
     "simple-get": "^3.0.2",
     "stream-to-blob": "^1.0.0",
     "stream-to-blob-url": "^2.1.0",
