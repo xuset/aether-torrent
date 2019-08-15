@@ -20,7 +20,7 @@
     "webtorrent": "^0.99.3"
   },
   "devDependencies": {
-    "babel-minify": "^0.4.0",
+    "babel-minify": "^0.5.1",
     "browserify": "^16.2.0",
     "karma": "^2.0.2",
     "karma-browserify": "^5.2.0",
